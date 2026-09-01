@@ -1,7 +1,7 @@
 /* AD0-E128 Prep Console — service worker
    Cache-first for the app shell so the console works offline.
    Bump CACHE_VERSION whenever you redeploy so clients pick up the new build. */
-const CACHE_VERSION = 'aem-prep-v4';
+const CACHE_VERSION = 'aem-prep-v6';
 const SHELL = [
   './',
   './index.html',

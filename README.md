@@ -33,6 +33,14 @@ Installable as a PWA, works offline, and runs entirely client-side.
   JCR-SQL2, i18n, repoinit, Cloud Manager quality gates, CFM-in-code) — now all authored,
   tracked green once drilled at least once.
 - **`/score`** — session history with confidence-distribution bars per session.
+- **`/guide`** — data-driven study guide, computed live from your actual `/weak`,
+  `/gaps`, and `/score` data rather than static text: **Focus Now** ranks the 5
+  blueprint sections by exam weight × how often recent drill answers in that section
+  were misses, lucky guesses, or misconceptions, and surfaces open `/weak` threads
+  plus undrilled zero-coverage topics; **Distractor Map** cross-links AEM 6.5-vs-Cloud
+  Service traps the exam still uses as wrong-answer bait, filterable by section;
+  **Reference Cards** condense every taught week's takeaways into one scannable
+  card per section.
 
 ## Deploy to GitHub Pages
 

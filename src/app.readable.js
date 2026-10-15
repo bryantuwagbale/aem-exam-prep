@@ -11922,8 +11922,157 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
       )
     );
   }
-  function am({ week: e, taught: t, onMarkTaught: a }) {
-    let o = Ms[e.n];
+
+  /* ===== Oct 15 2026 update: self-check gate + drill-this-week ===== */
+  var WEEK_DRILLS = {
+      101: ["q2", "q30", "q46", "q62", "q63"],
+      102: ["q3", "q4", "q22", "q32", "q37", "q38", "q40", "q59", "q60", "q61"],
+      103: ["q6", "q8", "q42", "q64", "q65"],
+      104: ["q13", "q16", "q17", "q29", "q33", "q43", "q44", "q45", "q47", "q51", "q52", "q53", "q54", "q55", "q56", "q57", "q58"],
+      105: ["q14", "q15", "q27", "q28", "q34", "q66", "q67", "q68", "q69"],
+      106: "UNSEEN",
+    },
+    CHECKS = {
+      101: [
+        { q: "A workflow model exists in two repository locations. Name both, and say which one actually executes.", a: "/conf/<project>/settings/workflow/models is the design-time model you edit. Sync writes a runtime copy to /var/workflow/models, and that copy is what runs." },
+        { q: "You edit a model and forget to click Sync. A launcher fires. Which version runs?", a: "The last synced runtime copy in /var. Your edits don't run until you sync." },
+        { q: "Write the annotation and class declaration for a custom process step. Which property sets its name in the step dropdown?", a: "@Component(service = WorkflowProcess.class, property = {\"process.label=...\"}) on a class that IMPLEMENTS WorkflowProcess (Granite). process.label is the dropdown name." },
+        { q: "Which single method do you write, and what are its three parameters?", a: "execute(WorkItem, WorkflowSession, MetaDataMap)." },
+        { q: "An option says models live in /etc/workflow/models. Why is it wrong on a modern question?", a: "That's the pre-6.4 location. Since 6.4: design time in /conf, runtime in /var." },
+        { q: "What starts a workflow automatically when content under a path changes?", a: "A launcher." },
+      ],
+      102: [
+        { q: "In an HTL number format pattern, what does % do, and who supplies the minus sign for a negative value?", a: "% multiplies by 100 and appends a percent sign (DecimalFormat). The minus is added automatically; don't put one in the pattern." },
+        { q: "A value is passed with data-sly-use ... @ name='x'. How does it reach the model, and what reads it?", a: "As a request attribute. The model adapts from SlingHttpServletRequest and reads it with @RequestAttribute." },
+        { q: "Make every injected field optional in one place. Where does the setting go, and what is it called?", a: "On @Model: defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL." },
+        { q: "Now make only one field optional. Where and what?", a: "On that field's injector annotation (e.g. @ValueMapValue): injectionStrategy = InjectionStrategy.OPTIONAL." },
+        { q: "One required field is missing and nothing is optional. What happens?", a: "adaptTo() returns null for the whole model." },
+      ],
+      103: [
+        { q: "Where do you control which components authors can drop into a template's page?", a: "The Layout Container's policy: Structure mode, select the container, open its policy, Allowed Components. Not the page policy, not Initial Content." },
+        { q: "A new component isn't in the Allowed Components list. Which component property decides how it's grouped there?", a: "componentGroup. Enable that group in the container's policy." },
+        { q: "Structure vs Initial Content: which one can authors change on a page?", a: "Initial Content (it's what a new page starts with). Structure is locked." },
+        { q: "Authors should pick between style variants of one component. Which policy, which field? And for a class that's always applied?", a: "The component's own policy, Allowed Styles (most modular). Always applied = Default CSS Classes." },
+        { q: "Where are policies stored?", a: "/conf/<site>/settings/wcm/policies." },
+      ],
+      104: [
+        { q: "Before restarting, rebuilding, reindexing or clearing a cache, what is always step one?", a: "Gather AEM-side evidence: a log, a console, or a queue." },
+        { q: "Match each to a log: exceptions / who requested a URL / per-request timing / who published something and when.", a: "error.log / access.log / request.log / audit.log." },
+        { q: "Name the Dispatcher's three separate jobs and the piece that owns each.", a: "/filter = what gets in. /cache /rules = what gets cached. Flush agent or /invalidate = when cached files get cleared." },
+        { q: "Content is stale on Publish right after publishing. Most likely culprit?", a: "The flush agent (cache not being invalidated)." },
+        { q: "On AEMaaCS a service picked up the wrong config values. Which two Developer Console views?", a: "Configurations + OSGi Services." },
+        { q: "An /apps clientlib isn't served through /etc.clientlibs, and clientlibs aren't minified. What do you check for each?", a: "allowProxy=true on the clientlib folder. Minify: the HTML Library Manager OSGi config." },
+      ],
+      105: [
+        { q: "Where do index definitions live, and how is that path written inside a code package?", a: "/oak:index at the repository root. In code the folder is _oak_index, because FileVault can't use a colon in a folder name." },
+        { q: "Why can't you just create an index in CRXDE on AEMaaCS?", a: "The repository is immutable at runtime, so indexes must ship in code." },
+        { q: "What's the AEMaaCS naming rule for custom indexes, and what happens when you change one?", a: "<name>-custom-<n>. Every change bumps n so the new version builds alongside the old one." },
+        { q: "Replication to Publish fails on permissions. Whose permissions? What privilege does namespace registration need?", a: "The replication (transport) user's, not the admin's. Namespace registration needs jcr:namespaceManagement." },
+        { q: "What replaces replication agents on AEMaaCS?", a: "Sling Content Distribution." },
+        { q: "What lets instances find each other so jobs can offload?", a: "Sling Discovery, which builds the topology." },
+      ],
+      106: [
+        { q: "Why is the official practice exam no longer a valid score?", a: "You've seen it 5 to 6 times, so it measures memory, not understanding." },
+        { q: "What's the test that proves you understand an item?", a: "You can say why each wrong option is wrong." },
+        { q: "Exam-day rule for a question that's dragging?", a: "About 90 seconds, pick the best answer, flag it, move on. Never leave a blank." },
+        { q: "When do you book the exam?", a: "When the readiness checklist is green." },
+      ],
+    };
+  function weekDrillIds(n, sessions) {
+    let w = WEEK_DRILLS[n];
+    if (!w) return [];
+    if (w === "UNSEEN") {
+      let seen = new Set((sessions || []).flatMap((x) => x.entries.map((y) => y.qId))),
+        un = As.filter((q) => !seen.has(q.id)).map((q) => q.id);
+      return un.length ? un : As.map((q) => q.id);
+    }
+    return w;
+  }
+  function firstAttempt(ids, sessions) {
+    let first = {};
+    [...(sessions || [])].reverse().forEach((x) =>
+      x.entries.forEach((y) => {
+        first[y.qId] || (first[y.qId] = y.cls);
+      }),
+    );
+    let seen = ids.filter((id) => first[id]),
+      hits = seen.filter((id) => first[id] === "hit").length;
+    return { total: ids.length, seen: seen.length, hits, pct: seen.length ? Math.round((hits / seen.length) * 100) : 0 };
+  }
+  function SelfCheck({ week: e, taught: t, onMarkTaught: mark, sessions: sx, onDrillWeek: dw, checking: ck, setChecking: setCk }) {
+    let items = CHECKS[e.n],
+      [st, setSt] = (0, i.useState)(null),
+      [rev, setRev] = (0, i.useState)({}),
+      [res, setRes] = (0, i.useState)({});
+    (0, i.useEffect)(() => {
+      (async () => setSt(await Eo("selfcheck-" + e.n, { passed: null, hands: !1 })))();
+    }, [e.n]);
+    let save = (nx) => (setSt(nx), Ta("selfcheck-" + e.n, nx));
+    if (!items || !st) return null;
+    let done = Object.keys(res).length,
+      got = Object.values(res).filter((v) => v === "got").length,
+      finished = done === items.length;
+    function answer(idx, v) {
+      let nr = { ...res, [idx]: v };
+      setRes(nr);
+      if (Object.keys(nr).length === items.length && Object.values(nr).every((x) => x === "got")) {
+        save({ ...st, passed: Ts() });
+        t || mark(e.n);
+      }
+    }
+    let ids = weekDrillIds(e.n, sx),
+      fa = firstAttempt(e.n === 106 ? As.map((q) => q.id) : ids, sx),
+      faOk = fa.seen >= Math.min(5, fa.total) && fa.pct >= 80,
+      el = i.default.createElement,
+      lab = (txt, col) => el("div", { style: { fontFamily: MONO, fontSize: 10.5, color: col, letterSpacing: 0.6, marginBottom: 6, textTransform: "uppercase" } }, txt),
+      tick = (ok, txt) =>
+        el("div", { style: { display: "flex", gap: 7, alignItems: "baseline", fontSize: 13, fontFamily: SANS, color: ok ? f.green : f.dim, marginBottom: 3 } },
+          el("span", { style: { fontFamily: MONO, width: 14 } }, ok ? "✓" : "○"), txt),
+      btn = (txt, on, col, filled) =>
+        el("button", { onClick: on, style: { ...smallBtn, fontFamily: MONO, fontSize: 12, border: `1px solid ${col}`, color: filled ? "#08160E" : col, background: filled ? col : "transparent", fontWeight: filled ? 700 : 400 } }, txt);
+    return el(
+      "div",
+      { style: { marginTop: 4, paddingTop: 14, borderTop: `1px dashed ${f.border}` } },
+      lab(ck ? "/check — lesson hidden · answer in your head, then reveal" : "/check — self-check", f.amber),
+      !ck &&
+        el("div", { style: { display: "flex", gap: 10, alignItems: "center", marginBottom: 12, flexWrap: "wrap" } },
+          btn(`start self-check (${items.length} prompts)`, () => (setRev({}), setRes({}), setCk(!0)), f.amber, !0),
+          el("span", { style: { fontFamily: SANS, fontSize: 12.5, color: f.dim } }, "Hides the lesson above so you recall instead of reread.")),
+      ck && items.map((it, idx) =>
+        el("div", { key: idx, style: { padding: "9px 11px", marginBottom: 7, border: `1px solid ${res[idx] === "got" ? f.green + "66" : res[idx] === "miss" ? f.red + "66" : f.border}`, borderRadius: 5, background: f.bg } },
+          el("div", { style: { fontSize: 13.5, lineHeight: 1.5, color: f.text, fontFamily: SANS } }, `${idx + 1}. ${it.q}`),
+          rev[idx]
+            ? el(i.default.Fragment, null,
+                el("div", { style: { fontSize: 13, lineHeight: 1.5, color: f.cyan, fontFamily: SANS, margin: "7px 0" } }, it.a),
+                res[idx]
+                  ? el("div", { style: { fontFamily: MONO, fontSize: 11.5, color: res[idx] === "got" ? f.green : f.red } }, res[idx] === "got" ? "got it cold" : "missed — reread that part above")
+                  : el("div", { style: { display: "flex", gap: 7 } }, btn("got it cold", () => answer(idx, "got"), f.green), btn("missed", () => answer(idx, "miss"), f.red)))
+            : el("div", { style: { marginTop: 7 } }, btn("reveal", () => setRev({ ...rev, [idx]: !0 }), f.dim)),
+        ),
+      ),
+      ck && finished &&
+        el("div", { style: { display: "flex", gap: 10, alignItems: "center", margin: "4px 0 12px", flexWrap: "wrap" } },
+          el("span", { style: { fontFamily: MONO, fontSize: 12.5, color: got === items.length ? f.green : f.amber } },
+            got === items.length ? `passed ${got}/${items.length} — week marked taught` : `${got}/${items.length} cold — reread what you missed, then retry`),
+          btn("retry", () => (setRev({}), setRes({})), f.dim),
+          btn("show lesson", () => setCk(!1), f.dim)),
+      ck && !finished &&
+        el("div", { style: { marginBottom: 12 } }, btn("stop · show lesson", () => setCk(!1), f.dim)),
+      lab("done when", f.dim),
+      tick(!!st.passed, st.passed ? `self-check passed (${st.passed})` : "self-check passed (all prompts cold, one pass)"),
+      Ms[e.n] && Ms[e.n].handsOn && e.n !== 106
+        ? el("label", { style: { display: "flex", gap: 7, alignItems: "center", fontSize: 13, fontFamily: SANS, color: st.hands ? f.green : f.dim, marginBottom: 3, cursor: "pointer" } },
+            el("input", { type: "checkbox", checked: !!st.hands, onChange: () => save({ ...st, hands: !st.hands }) }),
+            "hands-on task done")
+        : null,
+      tick(faOk, `≥80% first-attempt HITs on ${e.n === 106 ? "all items" : "this week's items"} — ${fa.seen}/${fa.total} seen, ${fa.hits} HIT (${fa.pct}%)`),
+      el("div", { style: { marginTop: 10 } },
+        btn(e.n === 106 ? `drill unseen items (${ids.length})` : `drill this week (${ids.length} items)`, () => dw(ids), f.amber, !0)),
+    );
+  }
+  function am({ week: e, taught: t, onMarkTaught: a, sessions: sx, onDrillWeek: dw }) {
+    let o = Ms[e.n],
+      [ck, setCk] = (0, i.useState)(!1);
     if (!o)
       return i.default.createElement(
         "div",
@@ -11978,13 +12127,13 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
           background: f.panelAlt,
         },
       },
-      i.default.createElement(
+      !ck && i.default.createElement(
         r,
         { label: "mechanism", color: f.cyan },
         o.mechanism,
       ),
-      i.default.createElement(r, { label: "analogy" }, o.analogy),
-      i.default.createElement(
+      !ck && i.default.createElement(r, { label: "analogy" }, o.analogy),
+      !ck && i.default.createElement(
         r,
         { label: "real artifact", color: f.violet },
         i.default.createElement(
@@ -12005,12 +12154,12 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
           o.artifact,
         ),
       ),
-      i.default.createElement(
+      !ck && i.default.createElement(
         r,
         { label: "/65 \u2014 6.5 delta", color: f.amber },
         o.delta65,
       ),
-      i.default.createElement(
+      !ck && i.default.createElement(
         r,
         { label: "/hands \u2014 inspect on the SDK", color: f.green },
         i.default.createElement(
@@ -12024,7 +12173,7 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
           o.handsOn,
         ),
       ),
-      i.default.createElement(
+      !ck && i.default.createElement(
         r,
         { label: "key takeaways", color: f.red },
         i.default.createElement(
@@ -12039,7 +12188,9 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
           ),
         ),
       ),
-      i.default.createElement(
+      CHECKS[e.n] &&
+        i.default.createElement(SelfCheck, { week: e, taught: t, onMarkTaught: a, sessions: sx, onDrillWeek: dw, checking: ck, setChecking: setCk }),
+      !CHECKS[e.n] && i.default.createElement(
         "button",
         {
           onClick: () => a(e.n),
@@ -12082,6 +12233,8 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
     setStartDate: r,
     currentWeek: n,
     dayOfPlan: l,
+    sessions: sx,
+    onDrillWeek: dw,
   }) {
     let [s, u] = (0, i.useState)(null),
       [c, g] = (0, i.useState)(!1),
@@ -12226,6 +12379,8 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
                 week: y,
                 taught: v === "done",
                 onMarkTaught: t,
+                sessions: sx,
+                onDrillWeek: dw,
               }),
           );
         };
@@ -12469,7 +12624,7 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
       ),
     );
   }
-  function rm({ onSessionComplete: e, setMisconceptions: t }) {
+  function rm({ onSessionComplete: e, setMisconceptions: t, preset: ps, clearPreset: cps }) {
     let [a, oSet] = (0, i.useState)([]),
       o = (w) =>
         oSet((cur) => {
@@ -12501,6 +12656,12 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
           () => clearInterval(te.current)
         );
     }, [u, l]);
+    (0, i.useEffect)(() => {
+      if (!ps) return;
+      let pool = As.filter((q) => ps.ids.includes(q.id)),
+        b = [...pool].sort(() => Math.random() - 0.5);
+      (s(0), x(b), y(0), v([]), p(null), m(!1), C([]), H(!1), W([]), c(!0), cps && cps());
+    }, [ps && ps.k]);
     function Xt() {
       let w = As.filter((B) => inSel(B.section)),
         b = [...w]
@@ -13937,6 +14098,7 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
       [g, x] = (0, i.useState)([]),
       [h, y] = (0, i.useState)(null),
       [I, v] = (0, i.useState)(null),
+      [pd, setPd] = (0, i.useState)(null),
       F = (0, i.useRef)(null);
     (0, i.useEffect)(() => () => clearTimeout(F.current), []);
     function p(P) {
@@ -14170,11 +14332,15 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
                   setStartDate: y,
                   currentWeek: A,
                   dayOfPlan: T,
+                  sessions: g,
+                  onDrillWeek: (ids) => (setPd({ ids, k: Date.now() }), t("drill")),
                 }),
               e === "drill" &&
                 i.default.createElement(rm, {
                   onSessionComplete: m,
                   setMisconceptions: c,
+                  preset: pd,
+                  clearPreset: () => setPd(null),
                 }),
               e === "review" && i.default.createElement(im, { weekStatus: r }),
               e === "weak" &&

@@ -14,6 +14,14 @@ Installable as a PWA, works offline, and runs entirely client-side.
 > to Debugging and Development), the glossary gained 18 terms, and `/weak` picks up 9
 > new tracked areas once, without touching your existing entries.
 
+> **Oct 15, 2026 update — self-check + drill this week.** Each sprint week in `/plan` now ends
+> with a **self-check**: 4–6 open recall prompts. "Start self-check" hides the lesson, you answer
+> in your head, reveal, and mark *got it cold* or *missed*. All prompts cold in one pass marks the
+> week taught (sprint weeks no longer have a manual "mark as taught" button). A **done when** list
+> tracks the self-check, the hands-on task, and ≥80% first-attempt HITs on that week's drill items.
+> **Drill this week** jumps to `/drill` with that week's mapped items (W6 uses only items you've
+> never attempted). `/drill` sections are now multi-select.
+
 - **Date-aware plan.** The console tracks a `startDate` (set automatically to the day
   you first open it — editable any time under "edit start date" in `/plan`) and
   computes which of the 12 weeks you're calendar-wise "supposed" to be on, shown as

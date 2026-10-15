@@ -12470,7 +12470,14 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
     );
   }
   function rm({ onSessionComplete: e, setMisconceptions: t }) {
-    let [a, o] = (0, i.useState)("ALL"),
+    let [a, oSet] = (0, i.useState)([]),
+      o = (w) =>
+        oSet((cur) => {
+          if (w === "ALL") return [];
+          let nx = cur.includes(w) ? cur.filter((z) => z !== w) : [...cur, w];
+          return nx.length === Ft.length ? [] : nx;
+        }),
+      inSel = (sec) => a.length === 0 || a.includes(sec),
       [r, n] = (0, i.useState)(10),
       [l, s] = (0, i.useState)(0),
       [u, c] = (0, i.useState)(!1),
@@ -12495,7 +12502,7 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
         );
     }, [u, l]);
     function Xt() {
-      let w = As.filter((B) => a === "ALL" || B.section === a),
+      let w = As.filter((B) => inSel(B.section)),
         b = [...w]
           .sort(() => Math.random() - 0.5)
           .slice(0, Math.min(r, w.length));
@@ -12598,7 +12605,7 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
             },
             ["ALL", ...Ft.map((w) => w.id)].map((w) => {
               let b = Ft.find((Me) => Me.id === w),
-                B = a === w,
+                B = w === "ALL" ? a.length === 0 : a.includes(w),
                 Y = As.filter((Me) => w === "ALL" || Me.section === w).length;
               return i.default.createElement(
                 "button",
@@ -12625,6 +12632,20 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
                 ")",
               );
             }),
+          ),
+          i.default.createElement(
+            "div",
+            {
+              style: {
+                fontSize: 11.5,
+                color: f.dim,
+                marginTop: 7,
+                fontFamily: "'IBM Plex Mono', monospace",
+              },
+            },
+            a.length === 0
+              ? `tap sections to combine \xB7 pool: ${As.length} items`
+              : `selected: ${[...a].sort().join(" + ")} \xB7 pool: ${As.filter((Me) => inSel(Me.section)).length} items`,
           ),
         ),
         i.default.createElement(

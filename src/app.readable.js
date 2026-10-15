@@ -11837,7 +11837,7 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
   }
   function tm({ tab: e, weekLabel: t }) {
     let [a, o] = (0, i.useState)(""),
-      r = `bryant@aem-prep:~/AD0-E128$ cd ${e}`;
+      r = `dev@aem-prep:~/AD0-E128$ cd ${e}`;
     return (
       (0, i.useEffect)(() => {
         o("");

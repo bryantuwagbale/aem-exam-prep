@@ -5,6 +5,15 @@ Installable as a PWA, works offline, and runs entirely client-side.
 
 ## What's in it
 
+> **Oct 14, 2026 update — 6-week sprint to the exam.** `/plan` now runs a 6-week sprint
+> (Oct 15 – Nov 25) with full teach content per week, a "ready to book" checklist, and
+> the daily 30-minute routine. The original 12-week plan is kept in a collapsed archive
+> with your taught marks intact. `/guide` opens with the 11 core rules plus path, log and
+> Dispatcher lookup tables. `/score` shows official practice exam history with a
+> trust note per section. `/drill` gained 20 new self-authored items (q51–q70, weighted
+> to Debugging and Development), the glossary gained 18 terms, and `/weak` picks up 9
+> new tracked areas once, without touching your existing entries.
+
 - **Date-aware plan.** The console tracks a `startDate` (set automatically to the day
   you first open it — editable any time under "edit start date" in `/plan`) and
   computes which of the 12 weeks you're calendar-wise "supposed" to be on, shown as
@@ -12,12 +21,12 @@ Installable as a PWA, works offline, and runs entirely client-side.
   against how many weeks you've actually marked taught). The matching week gets a
   `TODAY` marker in the list. This is separate from marking weeks taught — one tracks
   the calendar, the other tracks what you've actually done.
-- **`/plan`** — 12-week study plan, blueprint-weighted (S1–S5), each week expands into
+- **`/plan`** — 6-week sprint (plus archived 12-week plan), blueprint-weighted (S1–S5), each week expands into
   full `/teach` content: mechanism → analogy → real artifact → 6.5-vs-cloud delta →
   hands-on SDK task → key takeaways. Mark weeks taught with a one-tap **undo** if you
   misclick (toast appears for 6s, or toggle it back off any time from the same button).
-- **`/drill`** — 50 self-authored practice items (not reproductions of real exam
-  content), section-filterable, length 5 to all 50, session timers from 15 minutes up
+- **`/drill`** — 70 self-authored practice items (not reproductions of real exam
+  content), section-filterable, length 5 to all 70, session timers from 15 minutes up
   to a full **2h30m mock-exam** length. Confidence rating (1–5) is mandatory on every
   answer; scoring follows the rule that a right answer at low confidence still counts
   as a miss, and a wrong answer at high confidence gets flagged as a misconception.
@@ -112,20 +121,20 @@ Clearing site data / browser storage will erase your progress.
 
 ## Note on the practice items
 
-All 50 practice questions are original, written for this tool. They are not
+All 70 practice questions are original, written for this tool. They are not
 reproductions of real exam or licensed practice-test content, and none of the
 underlying answer keys were assumed — the higher-risk claims were checked against
 Apache Sling, OSGi, and Adobe's own documentation before being included.
 
 ## Rebuilding from source
 
-This deployed version is a compiled bundle (`app.js`). If you also have the
-`src/` folder (App.jsx, main.jsx, package.json), rebuild with:
+`src/app.readable.js` is the editable source: the full bundle (React included),
+formatted. Plan weeks, teach content, rules, drill items and glossary terms are
+plain data arrays near the top of the app code (search for `SPs`, `SMs`,
+`CORE_RULES`, `NEW_DRILLS`). After editing, rebuild and redeploy:
 
 ```bash
-npm install
-npx esbuild src/main.jsx --bundle --minify --format=iife --target=es2018 \
-  --define:process.env.NODE_ENV='"production"' --outfile=dist/app.js
+npx esbuild src/app.readable.js --minify --target=es2018 --outfile=app.js
 ```
 
-Then copy the new `app.js` into this folder, bump `CACHE_VERSION`, and redeploy.
+Then bump `CACHE_VERSION` in `sw.js` and push.

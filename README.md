@@ -14,6 +14,11 @@ Installable as a PWA, works offline, and runs entirely client-side.
 > to Debugging and Development), the glossary gained 18 terms, and `/weak` picks up 9
 > new tracked areas once, without touching your existing entries.
 
+> **Oct 19, 2026 — why your pick is wrong.** After a wrong answer, `/drill` shows a reason for the
+> specific option you chose (and, on multi-select items, for each correct option you missed),
+> above the general explanation. Reasons are written only from each item's audited explanation
+> and sources. Item data carries a `why` map keyed by option id.
+
 > **Oct 18, 2026 — Adobe docs audit.** Every drill item, lesson, self-check prompt, glossary entry
 > and distractor card was checked against Experience League (plus the Apache Sling and HTL spec
 > pages Adobe links to). After you answer a drill item, it shows *verified*, *corrected* or *partly

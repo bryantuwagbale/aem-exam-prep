@@ -12028,6 +12028,15 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
       tick = (ok, txt) =>
         el("div", { style: { display: "flex", gap: 7, alignItems: "baseline", fontSize: 13, fontFamily: SANS, color: ok ? f.green : f.dim, marginBottom: 3 } },
           el("span", { style: { fontFamily: MONO, width: 14 } }, ok ? "✓" : "○"), txt),
+      row = (ok, title, sub, onTap) =>
+        el(onTap ? "button" : "div", {
+            onClick: onTap || void 0,
+            style: { display: "flex", gap: 10, alignItems: "flex-start", width: "100%", textAlign: "left", padding: "7px 0", background: "none", border: "none", borderTop: `1px solid ${f.border}`, cursor: onTap ? "pointer" : "default", font: "inherit" },
+          },
+          el("span", { style: { flexShrink: 0, width: 16, height: 16, marginTop: 1, borderRadius: onTap ? 4 : 8, border: `1.5px solid ${ok ? f.green : f.faint}`, background: ok ? f.green : "transparent", color: "#08160E", fontSize: 11, fontWeight: 700, lineHeight: "13px", textAlign: "center", fontFamily: MONO } }, ok ? "\u2713" : ""),
+          el("span", { style: { display: "flex", flexDirection: "column", gap: 2, minWidth: 0 } },
+            el("span", { style: { fontFamily: SANS, fontSize: 13.5, color: ok ? f.green : f.text } }, title),
+            el("span", { style: { fontFamily: MONO, fontSize: 11.5, color: f.dim, overflowWrap: "anywhere" } }, sub))),
       btn = (txt, on, col, filled) =>
         el("button", { onClick: on, style: { ...smallBtn, fontFamily: MONO, fontSize: 12, border: `1px solid ${col}`, color: filled ? "#08160E" : col, background: filled ? col : "transparent", fontWeight: filled ? 700 : 400 } }, txt);
     return el(
@@ -12051,23 +12060,25 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
         ),
       ),
       ck && finished &&
-        el("div", { style: { display: "flex", gap: 10, alignItems: "center", margin: "4px 0 12px", flexWrap: "wrap" } },
-          el("span", { style: { fontFamily: MONO, fontSize: 12.5, color: got === items.length ? f.green : f.amber } },
-            got === items.length ? `passed ${got}/${items.length} — week marked taught` : `${got}/${items.length} cold — reread what you missed, then retry`),
-          btn("retry", () => (setRev({}), setRes({})), f.dim),
-          btn("show lesson", () => setCk(!1), f.dim)),
+        el("div", { style: { margin: "4px 0 14px", padding: "10px 12px", borderRadius: 5, border: `1px solid ${(got === items.length ? f.green : f.amber) + "55"}`, borderLeft: `3px solid ${got === items.length ? f.green : f.amber}`, background: f.bg } },
+          el("div", { style: { fontFamily: MONO, fontSize: 13, color: got === items.length ? f.green : f.amber, marginBottom: 3 } },
+            got === items.length ? `passed ${got}/${items.length}` : `${got}/${items.length} cold`),
+          el("div", { style: { fontFamily: SANS, fontSize: 13, color: f.dim, lineHeight: 1.45, marginBottom: 9 } },
+            got === items.length ? "Week marked taught." : "Reread what you missed, then retry tomorrow."),
+          el("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+            btn("retry", () => (setRev({}), setRes({})), f.dim),
+            btn("show lesson", () => setCk(!1), f.dim))),
       ck && !finished &&
         el("div", { style: { marginBottom: 12 } }, btn("stop · show lesson", () => setCk(!1), f.dim)),
-      lab("done when", f.dim),
-      tick(!!st.passed, st.passed ? `self-check passed (${st.passed})` : "self-check passed (all prompts cold, one pass)"),
-      Ms[e.n] && Ms[e.n].handsOn && e.n !== 106
-        ? el("label", { style: { display: "flex", gap: 7, alignItems: "center", fontSize: 13, fontFamily: SANS, color: st.hands ? f.green : f.dim, marginBottom: 3, cursor: "pointer" } },
-            el("input", { type: "checkbox", checked: !!st.hands, onChange: () => save({ ...st, hands: !st.hands }) }),
-            "hands-on task done")
-        : null,
-      tick(faOk, `≥80% first-attempt HITs on ${e.n === 106 ? "all items" : "this week's items"} — ${fa.seen}/${fa.total} seen, ${fa.hits} HIT (${fa.pct}%)`),
-      el("div", { style: { marginTop: 10 } },
-        btn(e.n === 106 ? `drill unseen items (${ids.length})` : `drill this week (${ids.length} items)`, () => dw(ids), f.amber, !0)),
+      el("div", { style: { border: `1px solid ${f.border}`, borderRadius: 5, background: f.bg, padding: "10px 12px 12px" } },
+        lab("done when", f.dim),
+        row(!!st.passed, "Self-check passed", st.passed ? `passed ${st.passed}` : "all prompts cold, one pass", null),
+        Ms[e.n] && Ms[e.n].handsOn && e.n !== 106
+          ? row(!!st.hands, "Hands-on task done", st.hands ? "tap to undo" : "tap when finished", () => save({ ...st, hands: !st.hands }))
+          : null,
+        row(faOk, `≥80% first-attempt HITs`, `${e.n === 106 ? "all items" : "this week's items"} · ${fa.seen}/${fa.total} seen · ${fa.hits} HIT (${fa.pct}%)`, null),
+        el("div", { style: { marginTop: 12 } },
+          btn(e.n === 106 ? `drill unseen items (${ids.length})` : `drill this week (${ids.length} items)`, () => dw(ids), f.amber, !0))),
     );
   }
   function am({ week: e, taught: t, onMarkTaught: a, sessions: sx, onDrillWeek: dw }) {

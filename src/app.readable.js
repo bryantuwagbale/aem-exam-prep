@@ -9711,6 +9711,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/the-sling-engine/url-to-script-resolution.html"
             }
           ]
+        },
+        "why": {
+          "a": "There's no teaser.html under /apps at all, so this script doesn't exist.",
+          "c": "It exists, but it ignores the 'compact' selector. Sling prefers the script that matches more selectors.",
+          "d": "A matching script does exist: teaser.compact.html under /libs, reached through the supertype."
         }
       },
       {
@@ -9754,6 +9759,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/the-sling-engine/url-to-script-resolution.html"
             }
           ]
+        },
+        "why": {
+          "a": "Scripts don't merge. Merging is what the Sling Resource Merger does for dialogs, not script resolution.",
+          "c": "Resolution is deterministic: /apps comes before /libs in the search path on every request.",
+          "d": "Timestamps play no part. The search path order (/apps first) decides."
         }
       },
       {
@@ -9794,6 +9804,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"
             }
           ]
+        },
+        "why": {
+          "a": "text escapes the value but doesn't validate it as a URL.",
+          "b": "html is for markup output, not a link target.",
+          "d": "attribute is for general attribute values; href gets the uri context, which validates the URL."
         }
       },
       {
@@ -9838,6 +9853,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://sling.apache.org/apidocs/sling14/org/apache/sling/models/annotations/injectorspecific/ValueMapValue.html"
             }
           ]
+        },
+        "why": {
+          "a": "That works, but it's per field. The question asks for one class-wide default.",
+          "c": "There's no Sling Models OSGi switch for this; it's set in code on @Model.",
+          "d": "It can: defaultInjectionStrategy on @Model is exactly the class-level setting."
         }
       },
       {
@@ -9878,6 +9898,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/sites/content-fragments/understand-content-fragments-and-experience-fragments"
             }
           ]
+        },
+        "why": {
+          "a": "Live Copy syncs pages and site structure from a blueprint, not reusable cross-channel content.",
+          "c": "Experience Fragments carry content and layout and are used 'as is'. The stem needs layout to differ per placement.",
+          "d": "A clientlib is CSS/JS, not content."
         }
       },
       {
@@ -9921,6 +9946,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/docs/experience-manager-65/developing/platform/templates/page-templates-editable.html?lang=en"
             }
           ]
+        },
+        "why": {
+          "a": "componentGroup only sorts the component into a group; it doesn't allow it on a template. (The property is also just componentGroup.)",
+          "c": "The Dispatcher handles caching and filtering, not authoring.",
+          "d": "The dialog defines the component's fields, not where it's allowed."
         }
       },
       {
@@ -9960,6 +9990,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/implementing/deploying/configuring-osgi.html"
             }
           ]
+        },
+        "why": {
+          "a": "A Managed Service config is a single instance. You need one per endpoint.",
+          "c": "A MANIFEST property is bundle metadata, not runtime configuration.",
+          "d": "repoinit creates users, paths and ACLs, not service configurations."
         }
       },
       {
@@ -10004,6 +10039,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/get-started/using"
             }
           ]
+        },
+        "why": {
+          "a": "Default CSS Classes give authors no choice, and the page policy isn't the component's policy.",
+          "b": "Right policy, wrong field: Default CSS Classes are always applied, with no author choice.",
+          "d": "The Layout Container's policy styles the container, not this component."
         }
       },
       {
@@ -10044,6 +10084,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
             }
           ]
+        },
+        "why": {
+          "b": "Works on 6.5, but AEMaaCS doesn't support custom log files. Only output written to error.log is accessible.",
+          "c": "A repository node doesn't configure logging.",
+          "d": "You don't edit files on AEMaaCS pods; configuration ships as code."
         }
       },
       {
@@ -10083,6 +10128,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/developing/archetype/using"
             }
           ]
+        },
+        "why": {
+          "b": "A property declared in one child module isn't visible to its siblings.",
+          "c": "Same problem: a child's properties don't reach the other modules.",
+          "d": "Maven has no separate properties.xml convention; shared properties go in the parent pom."
         }
       },
       {
@@ -10127,6 +10177,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://github.com/Adobe/aem-project-archetype"
             }
           ]
+        },
+        "why": {
+          "b": "general is the Webpack front-end build. SPA options were separate values in older archetypes, and the current one offers only general or none.",
+          "c": "Dispatcher config is its own module, unrelated to frontendModule.",
+          "d": "Java code goes in core; ui.frontend is a front-end build."
         }
       },
       {
@@ -10167,6 +10222,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/developing/archetype/using"
             }
           ]
+        },
+        "why": {
+          "a": "core is the Java bundle, not where configs live.",
+          "b": "ui.apps holds components, templates and clientlibs. Runmode-specific configs go in ui.config.",
+          "d": "ui.content holds content, not OSGi configs."
         }
       },
       {
@@ -10207,6 +10267,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/operations/replication"
             }
           ]
+        },
+        "why": {
+          "a": "Not a supported pattern; the documented options both go through AEM.",
+          "c": "It works, but Adobe lists it as the alternative. The preferred method is SCD invalidation.",
+          "d": "Restarting doesn't target specific cached resources, and it isn't a supported invalidation method."
         }
       },
       {
@@ -10251,6 +10316,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/developing/bestpractices/troubleshooting-slow-queries"
             }
           ]
+        },
+        "why": {
+          "b": "Restarting doesn't reindex.",
+          "c": "Only a brand-new index is populated on deployment. A changed definition needs reindex=true to cover old content.",
+          "d": "/oak:index holds every index definition; deleting it removes all of them."
         }
       },
       {
@@ -10296,6 +10366,13 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/configuring/troubleshoot-rep"
             }
           ]
+        },
+        "why": {
+          "a": "Correct: Adobe's troubleshooting checks whether the queue shows a blocked status.",
+          "b": "Correct: a blocked queue often means the Publish instance isn't running or responding.",
+          "c": "Reinstalling doesn't touch replication, and it's an action before you have evidence.",
+          "d": "Page names have nothing to do with a growing replication queue.",
+          "e": "The author's browser cache doesn't affect replication to Publish."
         }
       },
       {
@@ -10340,6 +10417,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-34606"
             }
           ]
+        },
+        "why": {
+          "a": "audit.log records who changed things, not blocked requests.",
+          "c": "Workflows aren't involved in serving the page.",
+          "d": "Author's error.log never sees a Publish request."
         }
       },
       {
@@ -10380,6 +10462,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
             }
           ]
+        },
+        "why": {
+          "a": "One pod's log can miss the request; it may have landed on another pod.",
+          "c": "The cache holds cached files, not request logs.",
+          "d": "Package Manager installs packages; it doesn't show request logs."
         }
       },
       {
@@ -10419,6 +10506,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-sdk/osgi-web-consoles"
             }
           ]
+        },
+        "why": {
+          "b": "Bundle Resource Provider exposes resources packed inside bundles; it doesn't show component state.",
+          "c": "Package Manager installs content packages; it doesn't show OSGi component state.",
+          "d": "CRXDE Lite browses the repository, not runtime OSGi services."
         }
       },
       {
@@ -10459,6 +10551,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/configuring-and-extending/content-fragments-customizing"
             }
           ]
+        },
+        "why": {
+          "b": "The Asset API handles DAM assets in general, not a fragment's model-defined elements.",
+          "c": "Adobe recommends the server-side Content Fragment API over reading the content structure directly.",
+          "d": "The Replication API publishes content; it doesn't read fragment fields."
         }
       },
       {
@@ -10503,6 +10600,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/hybrid/spa-editor-deprecation"
             }
           ]
+        },
+        "why": {
+          "b": "With no AEM integration there's nothing for authors to edit in context.",
+          "c": "Server-side rendering isn't what makes a component editable; MapTo is.",
+          "d": "GraphQL is the headless delivery path, not SPA Editor in-context editing."
         }
       },
       {
@@ -10544,6 +10646,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/headless/graphql-api/persisted-queries"
             }
           ]
+        },
+        "why": {
+          "b": "Query Builder searches the repository; it isn't a stored, reusable query for Content Fragment fields.",
+          "c": "The Sling Model Exporter outputs a component's JSON, not a stored query over fragments.",
+          "d": "JCR-SQL2 isn't stored server-side or cacheable the way persisted queries are."
         }
       },
       {
@@ -10593,6 +10700,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://sling.apache.org/documentation/bundles/internationalization-support-i18n.html"
             }
           ]
+        },
+        "why": {
+          "b": "Hand-written locale branching isn't the mechanism; HTL's i18n option looks up the dictionary.",
+          "c": "Dictionaries are found by Sling i18n automatically; you don't query them yourself.",
+          "d": "HTL has its own i18n option, so translation isn't confined to the model."
         }
       },
       {
@@ -10638,6 +10750,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://sling.apache.org/documentation/bundles/repository-initialization.html"
             }
           ]
+        },
+        "why": {
+          "b": "Manual setup isn't reproducible, and it happens after deployment, not before.",
+          "c": "A dialog defines authoring fields; it can't create users or ACLs.",
+          "d": "filter.xml only controls which paths a package covers; it creates nothing."
         }
       },
       {
@@ -10679,6 +10796,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/test-results/code-quality-testing.html"
             }
           ]
+        },
+        "why": {
+          "b": "Code quality runs before deployment, so runtime bundle problems aren't checked here.",
+          "c": "DNS is infrastructure; the code quality step scans code.",
+          "d": "SSL certificates are infrastructure; the code quality step scans code."
         }
       },
       {
@@ -10719,6 +10841,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/docs/experience-manager-learn/getting-started-wknd-tutorial-develop/project-archetype/unit-testing.html?lang=en"
             }
           ]
+        },
+        "why": {
+          "b": "Selenium drives a browser for UI tests and needs a running site.",
+          "c": "Postman sends manual API requests to a running instance.",
+          "d": "JMeter is for load testing."
         }
       },
       {
@@ -10760,6 +10887,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/developing/bestpractices/troubleshooting-slow-queries"
             }
           ]
+        },
+        "why": {
+          "b": "guessTotal is Query Builder-specific; it doesn't apply to JCR-SQL2.",
+          "c": "Reindexing doesn't change how results are counted.",
+          "d": "Dispatcher caching doesn't change how the query counts results."
         }
       },
       {
@@ -10799,6 +10931,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/deploying/aem-version-updates"
             }
           ]
+        },
+        "why": {
+          "b": "Adobe applies maintenance updates automatically; you can't opt out.",
+          "c": "Updates can affect customizations, which is why Adobe tells you to include tests for critical functionality.",
+          "d": "On AEMaaCS, Adobe applies updates through the pipeline; you don't patch it yourself."
         }
       },
       {
@@ -10839,6 +10976,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/docs/experience-manager-65/deploying/configuring/offloading.html?lang=en"
             }
           ]
+        },
+        "why": {
+          "b": "It's automatic: a new leader is chosen when the old one leaves.",
+          "c": "The Dispatcher caches and filters requests; it doesn't manage cluster membership.",
+          "d": "Package Manager installs packages; it has no role in topology."
         }
       },
       {
@@ -10879,6 +11021,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
             }
           ]
+        },
+        "why": {
+          "b": "Restarting is an action, not evidence, and blank output with no errors usually means missing content.",
+          "c": "A browser cache wouldn't produce a blank component with clean server logs.",
+          "d": "Rebuilding before you know the cause skips the evidence step."
         }
       },
       {
@@ -10918,6 +11065,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
             }
           ]
+        },
+        "why": {
+          "b": "access.log records who requested which URL, not Java exceptions.",
+          "c": "audit.log records who changed content, not exceptions.",
+          "d": "The Dispatcher log records cache and filter decisions, not repository exceptions."
         }
       },
       {
@@ -10966,6 +11118,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/get-started/using"
             }
           ]
+        },
+        "why": {
+          "a": "Adobe's example sets the supertype on the component, and the dialog node carries none.",
+          "c": "Template structure has nothing to do with component inheritance.",
+          "d": "Dialogs do merge, through the Sling Resource Merger along the resource-type hierarchy."
         }
       },
       {
@@ -11009,6 +11166,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"
             }
           ]
+        },
+        "why": {
+          "b": "@Inject has no field attribute; the name goes in @ValueMapValue's name.",
+          "c": "@Named sets a name for an injection; alone it doesn't make the field injectable from the value map.",
+          "d": "@PostConstruct runs a method after injection; it doesn't rename a property."
         }
       },
       {
@@ -11048,6 +11210,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/dispatcher-configuration"
             }
           ]
+        },
+        "why": {
+          "b": "It has nothing to do with SSL.",
+          "c": "It doesn't control retries.",
+          "d": "It doesn't control logging."
         }
       },
       {
@@ -11087,6 +11254,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/core-concepts/architecture.html?lang=en"
             }
           ]
+        },
+        "why": {
+          "b": "dispatcher.any configures caching and filtering, not pod counts.",
+          "c": "OSGi configs set service settings, not platform scaling.",
+          "d": "Custom code can't scale the platform; Adobe manages pod counts."
         }
       },
       {
@@ -11126,6 +11298,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://sling.apache.org/documentation/the-sling-engine/servlets.html"
             }
           ]
+        },
+        "why": {
+          "a": "Backwards: Sling's docs say path-bound servlets can't be access-controlled with repository ACLs.",
+          "c": "They differ: path binding loses repository ACL control, which is why Sling recommends resource types.",
+          "d": "Resource-type binding lets the repository ACLs apply, so you don't have to check by hand."
         }
       },
       {
@@ -11166,6 +11343,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/full-stack/clientlibs"
             }
           ]
+        },
+        "why": {
+          "a": "dependencies keeps libraries separate; the page links each one's files, so more requests.",
+          "c": "allowProxy lets /apps clientlibs be served from /etc.clientlibs; it doesn't combine anything.",
+          "d": "categories names the library; it doesn't bundle another one in."
         }
       },
       {
@@ -11205,6 +11387,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"
             }
           ]
+        },
+        "why": {
+          "b": "@Optional makes a field optional; it doesn't run code after injection.",
+          "c": "@Via changes which object a field is injected from.",
+          "d": "@Self injects the adaptable itself."
         }
       },
       {
@@ -11244,6 +11431,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"
             }
           ]
+        },
+        "why": {
+          "b": "data-sly-list keeps one host element and repeats only its content, so you'd get one <li> with everything inside.",
+          "c": "data-sly-test shows or hides an element; it doesn't loop.",
+          "d": "data-sly-use loads a model; it doesn't loop."
         }
       },
       {
@@ -11283,6 +11475,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/configuring-and-extending/content-fragments-customizing"
             }
           ]
+        },
+        "why": {
+          "b": "Reversed: the model is the schema, and fragments are created from it.",
+          "c": "They're different: a model defines the structure, a fragment is one item built from it.",
+          "d": "The schema is the Content Fragment Model, not a dialog."
         }
       },
       {
@@ -11322,6 +11519,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/full-stack/components-templates/enabling-json-exporter"
             }
           ]
+        },
+        "why": {
+          "b": "@ValueMapValue's name picks which repository property is read, not the JSON key.",
+          "c": "@Optional is about injection, not JSON names.",
+          "d": "adaptables sets what the model adapts from."
         }
       },
       {
@@ -11361,6 +11563,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/administering/reusing-content/msm/overview"
             }
           ]
+        },
+        "why": {
+          "b": "That ends sync for the whole page; you only want one component to diverge.",
+          "c": "Rollout configuration exclusions are site-wide settings, and the whole page would stop syncing.",
+          "d": "A language copy is a translation structure, not a way to cancel inheritance."
         }
       },
       {
@@ -11401,6 +11608,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/docs/experience-manager-65/developing/platform/templates/page-templates-editable.html?lang=en"
             }
           ]
+        },
+        "why": {
+          "b": "That property doesn't control which regions authors can change.",
+          "c": "The Dispatcher has nothing to do with authoring.",
+          "d": "A component's dialog edits that component; it doesn't set what's locked on a template."
         }
       },
       {
@@ -11441,6 +11653,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-16458"
             }
           ]
+        },
+        "why": {
+          "b": "A dialog export says nothing about hung threads.",
+          "c": "Install history doesn't show what's running right now.",
+          "d": "A model export says nothing about hung threads."
         }
       },
       {
@@ -11481,6 +11698,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-16458"
             }
           ]
+        },
+        "why": {
+          "b": "A thread dump shows what threads are doing, not what's in memory.",
+          "c": "The Dispatcher log records requests, not memory use.",
+          "d": "Replication status doesn't show what's using memory."
         }
       },
       {
@@ -11520,6 +11742,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/developing/bestpractices/troubleshooting-slow-queries"
             }
           ]
+        },
+        "why": {
+          "b": "The Dispatcher caches responses; it doesn't run or log queries.",
+          "c": "Replication queues carry content to Publish; they don't flag queries.",
+          "d": "Package Manager installs packages; it doesn't log queries."
         }
       },
       {
@@ -11560,6 +11787,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/administering/workflows-administering"
             }
           ]
+        },
+        "why": {
+          "b": "Package Manager has nothing to do with running workflows.",
+          "c": "Workflows run inside AEM; the Dispatcher never sees them.",
+          "d": "Node type definitions don't show workflow progress."
         }
       },
       {
@@ -11600,6 +11832,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
             }
           ]
+        },
+        "why": {
+          "b": "The top is often the outer code that caught and rethrew the exception.",
+          "c": "The servlet line is usually where the failure surfaced, not where it started.",
+          "d": "A timestamp tells you when, not why."
         }
       },
       {
@@ -11639,6 +11876,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/developing/archetype/using"
             }
           ]
+        },
+        "why": {
+          "b": "It doesn't replace ui.apps; it embeds it with the other modules.",
+          "c": "It isn't front-end only; it packages every compiled module.",
+          "d": "OSGi configs still go in ui.config; all just bundles everything."
         }
       },
       {
@@ -11678,6 +11920,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/deploy-code"
             }
           ]
+        },
+        "why": {
+          "b": "Production pipelines deploy to Stage first and promote only after validation.",
+          "c": "Cloud Manager runs automated build, code quality and test steps.",
+          "d": "Production deployments go through Cloud Manager's pipeline."
         }
       },
       {
@@ -11721,6 +11968,11 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
               "u": "https://sling.apache.org/documentation/the-sling-engine/mappings-for-resource-resolution.html"
             }
           ]
+        },
+        "why": {
+          "b": "/etc/map is a configuration tree, not something an author edits on one page.",
+          "c": "Dispatcher filters allow or block requests; they don't create new URLs for pages.",
+          "d": "A servlet is code the development team would have to write and deploy."
         }
       }
     ],
@@ -12188,6 +12440,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-24740"
             }
           ]
+        },
+        "why": {
+          "a": "access.log shows who requested a URL, not who published it.",
+          "c": "request.log shows timing, not who made a change.",
+          "d": "error.log only records failures, and nothing failed."
         }
       },
       {
@@ -12231,6 +12488,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/page-invalidate"
             }
           ]
+        },
+        "why": {
+          "a": "/filter decides which requests are allowed in, not what's cached or when it's cleared.",
+          "c": "The model renders fresh output whenever it's actually called; the stale copy is a cache problem.",
+          "d": "A browser cache wouldn't make one page stale for every visitor."
         }
       },
       {
@@ -12276,6 +12538,13 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/developer-console"
             }
           ]
+        },
+        "why": {
+          "a": "Correct: Configurations lists the property values per component.",
+          "b": "OSGi Services lists services and which bundles provide and use them, not their config values.",
+          "c": "Sling Jobs shows job queues, not configuration.",
+          "d": "Bundles shows whether code is installed and active, not config values.",
+          "e": "Correct: Components shows the values actually bound to each component, including ones from environment variables."
         }
       },
       {
@@ -12316,6 +12585,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
             }
           ]
+        },
+        "why": {
+          "a": "Clearing caches is an action taken before you know the cause; the browser already shows no error.",
+          "b": "Rebuilding before checking the logs skips the evidence step.",
+          "d": "Deleting nodes is destructive and comes before you know the cause."
         }
       },
       {
@@ -12359,6 +12633,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/developer-console"
             }
           ]
+        },
+        "why": {
+          "a": "Activation windows don't exist in OSGi.",
+          "c": "A Dispatcher block doesn't change a bundle's state.",
+          "d": "A wrong config value doesn't keep a bundle from resolving."
         }
       },
       {
@@ -12399,6 +12678,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/full-stack/clientlibs"
             }
           ]
+        },
+        "why": {
+          "b": "embed combines libraries; it doesn't make /apps clientlibs reachable through /etc.clientlibs.",
+          "c": "dependencies orders libraries; it doesn't enable the proxy.",
+          "d": "jsProcessor sets minification; it doesn't enable the proxy."
         }
       },
       {
@@ -12439,6 +12723,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/page-invalidate"
             }
           ]
+        },
+        "why": {
+          "a": "Not the documented request: invalidation is a POST with CQ-Action and CQ-Handle headers.",
+          "c": "Deactivating would unpublish the page, and the stem says publish nothing.",
+          "d": "DELETE isn't how the Dispatcher is flushed; the documented request is the invalidate POST."
         }
       },
       {
@@ -12483,6 +12772,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
             }
           ]
+        },
+        "why": {
+          "a": "audit.log records who changed things, not request durations.",
+          "c": "stdout.log isn't where request timing is recorded.",
+          "d": "history.log isn't where request timing is recorded."
         }
       },
       {
@@ -12513,7 +12807,7 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
           "b"
         ],
         "plain": "You have a decimal like -0.42 and want it shown as a percentage. Which HTL formatting pattern does the multiplying and adds the minus sign for you?",
-        "explain": "With a number, HTL uses DecimalFormat patterns: % multiplies by 100 and adds the sign, and negative numbers get a minus automatically, so #% gives -42%. Adding your own minus (a) doubles it. percentage isn't an HTL option. HTL expressions don't support arithmetic like * 100.",
+        "explain": "HTL number patterns (per the HTL spec): % multiplies by 100 and shows a percent sign, and negative numbers get their minus automatically, so #% gives -42%. Adding your own minus (a) doubles it. percentage isn't an HTL option, and HTL expressions have no arithmetic operators.",
         "audit": {
           "ver": "verified",
           "note": "The spec's own example: '#%' on -3.14 gives -314%.",
@@ -12523,6 +12817,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"
             }
           ]
+        },
+        "why": {
+          "a": "HTL adds the minus automatically for negative numbers, so adding your own doubles it.",
+          "c": "percentage isn't an HTL option.",
+          "d": "HTL expressions have no arithmetic operators, so '* 100' isn't allowed."
         }
       },
       {
@@ -12566,6 +12865,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"
             }
           ]
+        },
+        "why": {
+          "a": "@ValueMapValue reads properties on the content node, not values passed from HTL.",
+          "c": "@ScriptVariable reads HTL script bindings such as currentPage.",
+          "d": "@OSGiService injects an OSGi service."
         }
       },
       {
@@ -12609,6 +12913,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://sling.apache.org/apidocs/sling14/org/apache/sling/models/annotations/injectorspecific/ValueMapValue.html"
             }
           ]
+        },
+        "why": {
+          "a": "It works, but it's per field. The question asks for one setting that covers every field.",
+          "c": "injectionStrategy is the field-level attribute; on @Model the class-level one is defaultInjectionStrategy.",
+          "d": "HTL has no try/catch."
         }
       },
       {
@@ -12648,6 +12957,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/forms/adaptive-forms/custom-process-step-aem-workflow"
             }
           ]
+        },
+        "why": {
+          "a": "WorkflowProcess is an interface: you implement it, you can't extend it.",
+          "c": "Registered as a Servlet, the class is hidden from the workflow engine.",
+          "d": "Sling Models aren't workflow steps."
         }
       },
       {
@@ -12678,7 +12992,7 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
           "b"
         ],
         "plain": "You changed the plan but didn't publish the change to the engine. Does the engine use your draft or the last version it was given?",
-        "explain": "The engine executes the runtime copy in /var. Edits in /conf take effect only when sync writes a new runtime copy. Unsynced models aren't disabled, and /etc/workflow/models is the pre-6.4 location.",
+        "explain": "The engine executes the runtime copy in /var. Edits in /conf take effect only when Sync writes a new runtime copy. Unsynced models aren't disabled, and /etc is the legacy workflow location.",
         "audit": {
           "ver": "verified",
           "src": [
@@ -12687,6 +13001,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://experienceleague.adobe.com/docs/experience-manager-65/developing/extending-aem/extending-workflows/workflows-models.html?lang=en"
             }
           ]
+        },
+        "why": {
+          "a": "The engine runs the runtime copy in /var, not the design copy in /conf.",
+          "c": "Unsynced models aren't disabled; the last synced copy keeps running.",
+          "d": "/etc is the legacy workflow location; the runtime copy is in /var."
         }
       },
       {
@@ -12730,6 +13049,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/get-started/using"
             }
           ]
+        },
+        "why": {
+          "a": "Default CSS Classes are always applied; authors get no choice.",
+          "c": "The Layout Container's policy styles the container, not the Teaser.",
+          "d": "A clientlib only loads CSS and JS; it gives authors no choice."
         }
       },
       {
@@ -12769,6 +13093,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/get-started/using"
             }
           ]
+        },
+        "why": {
+          "a": "Initial Content only pre-places components on new pages; it doesn't make them droppable.",
+          "c": "A clientlib loads assets; it doesn't allow a component.",
+          "d": "The title has no effect on whether a component is allowed."
         }
       },
       {
@@ -12809,6 +13138,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/operations/indexing.html?lang=en"
             }
           ]
+        },
+        "why": {
+          "a": "Changing production directly breaks CI/CD; AEMaaCS index changes ship through deployments.",
+          "c": "/etc/oak:indexes isn't an index location; definitions go under /oak:index (_oak_index in code).",
+          "d": "repository.xml isn't how indexes are defined."
         }
       },
       {
@@ -12853,6 +13187,13 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/configuring/troubleshoot-rep"
             }
           ]
+        },
+        "why": {
+          "a": "Correct: registering a namespace needs jcr:namespaceManagement at the repository level.",
+          "b": "Correct: the replication user also needs read and write where the content is installed.",
+          "c": "Replication runs as the replication user, not the admin.",
+          "d": "The flush agent clears the cache; it doesn't block the replication queue.",
+          "e": "Indexes don't affect replication."
         }
       },
       {
@@ -12893,6 +13234,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/deploying/aem-version-updates"
             }
           ]
+        },
+        "why": {
+          "a": "Going straight to production skips validation, the opposite of least disruption.",
+          "c": "Waiting for bug reports is reactive and leaves known fixes unapplied.",
+          "d": "Running different versions on Author and Publish causes problems of its own."
         }
       },
       {
@@ -12933,6 +13279,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://experienceleague.adobe.com/docs/experience-manager-65/deploying/configuring/offloading.html?lang=en"
             }
           ]
+        },
+        "why": {
+          "b": "Invented name.",
+          "c": "Invented name.",
+          "d": "Invented name."
         }
       },
       {
@@ -12977,6 +13328,11 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
               "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
             }
           ]
+        },
+        "why": {
+          "b": "The plain config folder has no runmode, so it would apply to Author too.",
+          "c": "/conf isn't where OSGi configs go, and one file can't define two factory instances.",
+          "d": "/libs is Adobe's; your code goes in /apps."
         }
       }
     ];
@@ -13616,6 +13972,27 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
           x.t, " \u2197",
         ),
       ),
+    );
+  }
+  function WhyPick({ q, picked }) {
+    if (!q || !q.why) return null;
+    let wrong = picked.filter((x) => !q.correct.includes(x)),
+      missed = q.type === "multi" ? q.correct.filter((x) => !picked.includes(x)) : [],
+      txt = (id) => (q.options.find((o) => o.id === id) || {}).text || "",
+      el = i.default.createElement,
+      row = (id, col, head, body) =>
+        el(
+          "div",
+          { key: head + id, style: { padding: "8px 10px", borderLeft: `3px solid ${col}`, background: f.bg, borderRadius: "0 4px 4px 0", marginBottom: 6 } },
+          el("div", { style: { fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: col, marginBottom: 3, overflowWrap: "anywhere" } }, `${head} (${id}) \u2014 ${txt(id)}`),
+          el("div", { style: { fontSize: 13.5, lineHeight: 1.5, color: f.text, fontFamily: "'IBM Plex Sans', sans-serif" } }, (q.why[id] || "See the explanation below.").replace(/^Correct: /, "")),
+        );
+    if (!wrong.length && !missed.length) return null;
+    return el(
+      "div",
+      { style: { marginBottom: 10 } },
+      wrong.map((id) => row(id, f.red, "\u2717 why your pick is wrong")),
+      missed.map((id) => row(id, f.green, "\u2713 you missed")),
     );
   }
   function AuditNote({ audit: a }) {
@@ -14906,6 +15283,7 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
                     B,
                   ),
                 ),
+                i.default.createElement(WhyPick, { q: Se, picked: I }),
                 i.default.createElement(
                   "p",
                   {

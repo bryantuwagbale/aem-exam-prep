@@ -9447,7 +9447,7 @@ Error generating stack: ` +
     Ms = {
       1: {
         mechanism:
-          "Resolution happens in two separate steps. First, resource resolution turns the incoming URL into a repository resource (handling vanity paths, mappings, extension/selector parsing along the way). Second, script resolution takes that resource's sling:resourceType property and finds the actual script to render it \u2014 searching /apps before /libs, and within a resource type folder, narrowing by selector and extension. sling:resourceSuperType only kicks in when the resolver finds no matching script anywhere in the current type's own folder \u2014 it's a full fallback to a different resource type entirely, not a merge.",
+          "Resolution happens in two steps. First, resource resolution turns the incoming URL into a repository resource (vanity paths, mappings, selector and extension parsing). Second, script resolution takes the resource's sling:resourceType and finds the script to render it. Scripts are looked up along the search path (/apps before /libs) and up the sling:resourceSuperType chain. When several scripts qualify, Sling prefers the one matching more selectors, then one matching the extension, then the one found earlier in the lookup order.",
         analogy: `Think of it like a recipe book. sling:resourceType is the dish name, not the recipe itself. Your /apps folder is your personal recipe box \u2014 checked first. /libs is the factory cookbook everyone shares. If your personal box has the recipe, that's what you cook, full stop \u2014 the factory version is never even glanced at (shadowing, not blending). Selectors are recipe variants ("spicy" vs "mild"). sling:resourceSuperType is what happens when your own recipe box has nothing for this dish at all: you don't improvise, you go borrow your mentor chef's entire book instead.`,
         artifact: `/apps/myproject/components/teaser/.content.xml
   jcr:primaryType="cq:Component"
@@ -9460,14 +9460,14 @@ Error generating stack: ` +
         takeaways: [
           "Resolution = resource resolution, then script resolution \u2014 two distinct steps",
           "/apps is searched before /libs; first match wins outright (shadowing, not merging)",
-          "sling:resourceSuperType is a full fallback to a different type, triggered only when the local type has nothing at all",
+          "sling:resourceSuperType adds the parent type's scripts to the lookup; a better selector match can win from the parent, ties go to the script found first",
           "Selectors/extension narrow which script within a resource type gets picked",
           "Dialog inheritance via the Sling Resource Merger is a separate, merging mechanism \u2014 don't conflate it with script shadowing",
         ],
       },
       2: {
         mechanism:
-          "The Dispatcher decides two things per request: whether to serve from cache and whether to cache the response afterward. Filter rules (allow/deny by path, extension, selector, etc.) are evaluated in order, but the LAST matching rule wins \u2014 not the first. /statfileslevel controls how many directory levels up the dispatcher checks a .stat file to decide if cached content is stale. /allowAuthorized controls whether requests carrying an Authorization header are still eligible for caching. Cache invalidation in AEMaaCS flows through a Dispatcher Flush replication agent, triggered by the Replication API \u2014 there's no direct filesystem access to clear cache files by hand.",
+          "The Dispatcher decides two things per request: whether to accept it and whether to serve or cache it. /filter rules (allow/deny by path, extension, selector and so on) are evaluated, and when several match, the LAST matching rule wins. /cache /rules decides what's cacheable, and URLs with a query string aren't cached unless the parameters are ignored. /statfileslevel sets how many folder levels get their own .stat file; a cached file is refetched when its .stat file is newer. /allowAuthorized controls whether requests carrying authentication are cached. On AEMaaCS, explicit invalidation is preferably done with Sling Content Distribution from Author; the Replication API driving the publish flush agent is the alternative.",
         analogy:
           "Filter rules are like a will with codicils: the most recently added clause overrides everything before it, even if an earlier clause said the opposite. So when you're debugging why a path got blocked, don't stop at the first matching rule you find \u2014 keep reading down to the last one that applies.",
         artifact: `/0001 { /type "deny" /url "/*" }
@@ -9481,7 +9481,7 @@ Error generating stack: ` +
           "Filter rules: last matching rule wins, not first",
           "/statfileslevel = how many directory levels up a .stat file is checked for staleness",
           "/allowAuthorized controls caching of requests with an Authorization header",
-          "AEMaaCS invalidation = Replication API \u2192 Dispatcher Flush agent, never direct file access",
+          "AEMaaCS explicit invalidation: SCD from Author (preferred) or Replication API + publish flush agent; never direct file access",
         ],
       },
       3: {
@@ -9569,7 +9569,7 @@ public class Teaser {
       },
       7: {
         mechanism:
-          "Content Fragments are structured, channel-agnostic content defined by a model schema \u2014 no layout attached. Experience Fragments carry both content and presentation, built to be exported and reused across channels including native apps. Live Copy / MSM syncs page structure from a blueprint to copies, with Rollout Configurations controlling what propagates on rollout \u2014 including excluding specific content from replication during that rollout. A custom Workflow Model is the flow definition (steps, transitions); a Workflow Process is a Java class implementing WorkflowProcess, registered as an OSGi component and referenced by a process step inside the model.",
+          "Content Fragments are structured, presentation-agnostic content defined by a model: the channel owns layout and design. Experience Fragments are a composite of components with content and presentation, used 'as is' in channels. Live Copy / MSM syncs pages from a blueprint; rollout configurations pair a trigger with actions, and OSGi settings can exclude node types, paragraph items or page properties from sync. A Workflow Model is the flow definition; a Workflow Process is a Java class implementing WorkflowProcess, registered as an OSGi component and referenced by a Process Step.",
         analogy:
           "Content Fragment = a raw ingredient. Experience Fragment = the plated dish, ready to serve as-is across different tables (channels). Live Copy is a franchise store that syncs menu changes from HQ automatically, but a Rollout Configuration lets a specific store opt certain items out of that sync. A Workflow Model is the recipe card sequence; a Workflow Process is one cook actually executing a single step in code.",
         artifact: `@Component(
@@ -9584,14 +9584,14 @@ public class NotifyApproverProcess implements WorkflowProcess {
         handsOn:
           "In the local SDK, write a minimal custom WorkflowProcess, register it, add it as a step in a Workflow Model via the Workflow Console, and run it against a test page.",
         takeaways: [
-          "Content Fragment = structured content only; Experience Fragment = content + layout, cross-channel",
+          "Content Fragment = content only, channel owns layout; Experience Fragment = content + layout, used as-is",
           "Rollout Configuration can exclude specific content from an MSM rollout",
           "Workflow Model = the flow; Workflow Process = a Java class implementing one step",
         ],
       },
       8: {
         mechanism:
-          "Standard AEM Maven layout: parent pom for shared properties/dependency management, core (Java bundle), ui.apps (immutable \u2014 deployed under /apps and /libs, wholesale-replaced on every deploy), ui.content (mutable-safe seed/sample content), ui.config (OSGi configs), ui.frontend (client-side build), and all (aggregate package). repoinit is a scripted bootstrap \u2014 service users, ACLs, node creation \u2014 that runs before content packages install. Cloud Manager's pipeline runs automated Code Quality gates (SonarQube-based) between build and deploy; a failing gate blocks promotion to the next environment.",
+          "Standard AEM Maven layout: parent pom for global properties and dependency management, core (Java bundle), ui.apps (/apps code: components, templates, clientlibs), ui.content (content), ui.config (runmode-specific OSGi configs), ui.frontend (Webpack front-end build), and all (one package embedding every module). repoinit scripts ship as a RepositoryInitializer OSGi config and run while the repository starts up, before it's handed to other code, so service users and ACLs exist early. Cloud Manager's code quality step (SonarQube plus OakPAL) fails the pipeline on Critical issues and pauses it on Important ones.",
         analogy:
           "ui.apps vs ui.content is a factory-installed showroom versus a shopper's cart: the showroom (ui.apps) gets torn out and rebuilt fresh every deploy, while the cart (ui.content, author-added content) is preserved. repoinit is the store's opening checklist \u2014 create the accounts, set the locks \u2014 run before anything gets stocked on the shelves.",
         artifact: `<!-- parent pom.xml -->
@@ -9606,16 +9606,16 @@ public class NotifyApproverProcess implements WorkflowProcess {
         delta65:
           "On-prem, you could hand-edit config or content directly on the server. AEMaaCS enforces /apps and /libs as genuinely immutable at the platform level \u2014 there's no way to hand-edit them in prod, everything must go through code and the Cloud Manager pipeline.",
         handsOn:
-          "Open the SDK project's module folders, find a repoinit script inside ui.config, and trace how it's referenced (typically via a provisioning/filter reference) so you can see the bootstrap-before-content ordering in practice.",
+          "Open the project's module folders and find the RepositoryInitializer OSGi config (the repoinit script) in ui.config. Read which service users and ACLs it creates.",
         takeaways: [
           "ui.apps = immutable, replaced wholesale each deploy; ui.content = mutable-safe author content",
-          "repoinit runs before content packages install \u2014 bootstraps users/ACLs/nodes",
+          "repoinit runs at repository startup, before other code uses the repository: users, ACLs, paths, namespaces",
           "Cloud Manager Code Quality gate = SonarQube-based; a violation blocks the pipeline",
         ],
       },
       9: {
         mechanism:
-          "Different logs answer different questions: error.log = exceptions/stack traces, request.log = per-request timing and status, access.log = who hit what and when (NCSA-style), audit.log = content/permission changes made by users (not runtime errors), and the dispatcher's own log = cache hit/miss/pass-through decisions. Replication troubleshooting starts with: is the agent enabled and reachable, is the queue paused, does the acting user have the right read/write privileges at the target path. An Oak reindex is triggered by setting the reindex flag on the index definition \u2014 it doesn't happen automatically just from deploying a new definition. The Discovery Service is what lets AEM instances in a cluster/offloaded topology find each other and elect a leader for centralized tasks.",
+          "Different logs answer different questions: error.log = exceptions and stack traces, request.log = request and response lines with response time, access.log = who requested which URL, audit.log = who did what to pages, replication and DAM, and the Dispatcher log = cache decisions and blocked requests. Replication troubleshooting starts with whether items are queuing, whether the queue shows blocked, and whether the Publish instance is running; namespace replication also needs jcr:namespaceManagement for the replication user. On 6.5, setting reindex=true on an index definition triggers a full reindex; a brand-new index is populated on initial deployment. The Discovery Service lets instances form a topology, and each cluster has a leader.",
         analogy:
           "Each log is a different security camera pointed at a different part of the building: error.log watches the kitchen for fires, access.log watches the front door for who came and went, audit.log is the guest sign-in ledger, and the dispatcher log watches the concierge deciding who gets handed a fresh answer versus a photocopy from the file cabinet.",
         artifact: `# dispatcher log line (illustrative)
@@ -9627,17 +9627,17 @@ public class NotifyApproverProcess implements WorkflowProcess {
         handsOn:
           "Tail error.log and request.log simultaneously on the local author instance while loading a page, and compare what each one actually records for the same request.",
         takeaways: [
-          "403/blocked request \u2192 dispatcher/access log, not audit.log",
+          "Blocked by the Dispatcher /filter = 404, shown as 'blocked' in the Dispatcher log",
           "audit.log = who changed what content/permissions, not runtime errors",
-          "Reindex requires explicitly setting the reindex flag \u2014 not automatic",
+          "Changed index on 6.5 = set reindex=true; a brand-new index is populated on deployment",
           "Discovery Service = cluster membership + leader election",
         ],
       },
       10: {
         mechanism:
-          "Five topics with zero prior coverage, covered here at survey depth: (1) Unit testing \u2014 AEM Mocks (io.wcm.testing / Sling Mocks) + JUnit let you test Sling Models and servlets without a running instance. (2) GraphQL/headless \u2014 persisted queries against Content Fragments, served via /graphql/execute.json, distinct from the SPA Editor. (3) SPA Editor \u2014 React/Angular apps map components to resource types via MapTo, driven by the page model JSON. (4) Query Builder vs JCR-SQL2 \u2014 Query Builder is a simple predicate-map API good for UI-driven search; JCR-SQL2 is a full SQL-like query language, better for complex joins and code-level efficiency. (5) i18n \u2014 translation dictionaries live under /apps or /conf, looked up via the i18n HTL global object against the current page's language root.",
+          "Five topics with zero prior coverage, at survey depth: (1) Unit testing: JUnit 5, Mockito and wcm.io AEM Mocks test Sling Models without a running instance. (2) GraphQL/headless: persisted queries against Content Fragments, run with GET /graphql/execute.json so responses can be cached. (3) SPA Editor: React components map to resource types with MapTo, driven by the page model JSON (deprecated for new projects since 2025.01). (4) Query Builder: a predicate-based API; p.guessTotal stops it counting every result, and that option doesn't apply to JCR-SQL2 or XPath. (5) i18n: HTL's i18n option translates strings; the language comes from the user's preference or the requested page's locale, and dictionaries are Sling i18n nodes (mix:language).",
         analogy:
-          "Query Builder is ordering off a fixed menu (predicates plugged into URL parameters); JCR-SQL2 is cooking from the full pantry (arbitrary joins and conditions) when the menu doesn't have what you need.",
+          "Query Builder is ordering off a menu with predicates; guessTotal is telling the waiter 'roughly how many' instead of making them count every plate.",
         artifact: `-- JCR-SQL2
 SELECT * FROM [nt:base] AS a
   WHERE ISDESCENDANTNODE(a, '/content/mysite')
@@ -9648,13 +9648,13 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
         delta65:
           "None of these are cloud-vs-6.5 deltas \u2014 they're simply topics your day-to-day authoring/dev work hasn't touched yet. One currency note: Adobe now marks the SPA Editor as deprecated for new projects (existing ones still supported), pointing new work at the Universal Editor instead \u2014 know the SPA Editor mechanism for the exam, but don't take it as current best practice for new builds.",
         handsOn:
-          "If the local SDK exposes GraphiQL, run one query against a test Content Fragment model; separately, open the Query Builder debug tool and rewrite the same search as JCR-SQL2 to feel the difference directly.",
+          "If the local SDK exposes GraphiQL, run one query against a test Content Fragment model. Separately, run a Query Builder search in the debugger with and without p.guessTotal and compare the response.",
         takeaways: [
           "AEM Mocks + JUnit = standard unit testing approach for Sling Models/servlets",
           "GraphQL persisted queries target Content Fragments specifically, not general content",
           "SPA Editor components MapTo a resource type; the page model JSON drives editability",
-          "Query Builder = simple/UI-friendly; JCR-SQL2 = complex joins, more efficient in code",
-          "i18n dictionaries resolve via the i18n HTL global object against the page's language root",
+          "Query Builder: p.guessTotal avoids counting every result (Query Builder only)",
+          "i18n: language from user preference or requested page locale; dictionaries are Sling i18n nodes",
         ],
       },
     },
@@ -9662,7 +9662,7 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
       { id: "testing", label: "unit testing", qIds: ["q25"] },
       { id: "graphql", label: "GraphQL / headless", qIds: ["q21"] },
       { id: "spa", label: "SPA Editor", qIds: ["q20"] },
-      { id: "querybuilder", label: "Query Builder vs JCR-SQL2", qIds: ["q26"] },
+      { id: "querybuilder", label: "Query Builder (guessTotal)", qIds: ["q26"] },
       { id: "i18n", label: "i18n", qIds: ["q22"] },
       { id: "repoinit", label: "repoinit", qIds: ["q23"] },
       {
@@ -9674,1082 +9674,2055 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
     ],
     As = [
       {
-        id: "q1",
-        section: "S2",
-        type: "single",
-        stem: 'A proxy component at /apps/myproject/components/teaser has sling:resourceSuperType pointing to /libs/core/wcm/components/teaser/v2/teaser. There is no teaser.html anywhere under /apps. A request arrives for the resource with selector "compact" and extension html. Under /libs, both teaser.html and teaser.compact.html exist.',
-        q: "Which script renders?",
-        options: [
-          { id: "a", text: "/apps/.../teaser.html" },
-          { id: "b", text: "/libs/.../teaser.compact.html" },
-          { id: "c", text: "/libs/.../teaser.html" },
-          { id: "d", text: "404 \u2014 no matching script" },
+        "id": "q1",
+        "section": "S2",
+        "type": "single",
+        "stem": "A proxy component at /apps/myproject/components/teaser has sling:resourceSuperType pointing to /libs/core/wcm/components/teaser/v2/teaser. There is no teaser.html anywhere under /apps. A request arrives for the resource with selector \"compact\" and extension html. Under /libs, both teaser.html and teaser.compact.html exist.",
+        "q": "Which script renders?",
+        "options": [
+          {
+            "id": "a",
+            "text": "/apps/.../teaser.html"
+          },
+          {
+            "id": "b",
+            "text": "/libs/.../teaser.compact.html"
+          },
+          {
+            "id": "c",
+            "text": "/libs/.../teaser.html"
+          },
+          {
+            "id": "d",
+            "text": "404 — no matching script"
+          }
         ],
-        correct: ["b"],
-        plain: `Basically: if your component has no scripts of its own and just points to a core component, which of the parent's scripts actually gets used when the URL adds an extra "flavor" tag (selector)?`,
-        explain:
-          "With no /apps override at all, resolution falls through to /libs via the super type chain, and within /libs the selector-specific script (teaser.compact.html) beats the generic one. (a) doesn't exist. (c) ignores the selector. (d) is wrong because a selector script does exist.",
+        "correct": [
+          "b"
+        ],
+        "plain": "Basically: if your component has no scripts of its own and just points to a core component, which of the parent's scripts actually gets used when the URL adds an extra \"flavor\" tag (selector)?",
+        "explain": "With no /apps override at all, resolution falls through to /libs via the super type chain, and within /libs the selector-specific script (teaser.compact.html) beats the generic one. (a) doesn't exist. (c) ignores the selector. (d) is wrong because a selector script does exist.",
+        "audit": {
+          "ver": "verified",
+          "note": "Sling ranks scripts that match more selectors higher. With no /apps script at all, both candidates sit under /libs, so the selector script wins.",
+          "src": [
+            {
+              "t": "Apache Sling: URL to Script Resolution",
+              "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/the-sling-engine/url-to-script-resolution.html"
+            }
+          ]
+        }
       },
       {
-        id: "q2",
-        section: "S2",
-        type: "single",
-        stem: "Both /apps/myproject/components/list/list.html and /libs/foundation/components/list/list.html exist for the same resource type, with /apps overlaying /libs.",
-        q: "What happens to the /libs script at render time?",
-        options: [
-          { id: "a", text: "Both scripts run and their output is merged" },
-          { id: "b", text: "Only /apps renders; /libs is fully shadowed" },
-          { id: "c", text: "AEM alternates between them per request" },
+        "id": "q2",
+        "section": "S2",
+        "type": "single",
+        "stem": "Both /apps/myproject/components/list/list.html and /libs/foundation/components/list/list.html exist for the same resource type, with /apps overlaying /libs.",
+        "q": "What happens to the /libs script at render time?",
+        "options": [
           {
-            id: "d",
-            text: "The one with the later file-system timestamp wins",
+            "id": "a",
+            "text": "Both scripts run and their output is merged"
           },
+          {
+            "id": "b",
+            "text": "Only /apps renders; /libs is fully shadowed"
+          },
+          {
+            "id": "c",
+            "text": "AEM alternates between them per request"
+          },
+          {
+            "id": "d",
+            "text": "The one with the later file-system timestamp wins"
+          }
         ],
-        correct: ["b"],
-        plain:
-          "If you have your own version of a script and AEM's built-in one exists too, does AEM run both and blend the output, or does yours just take over completely?",
-        explain:
-          "Script-level resolution is shadowing, not merging \u2014 first match under the search path (/apps before /libs) wins outright and the other script never executes. This is distinct from dialog inheritance via the Sling Resource Merger, which does merge.",
+        "correct": [
+          "b"
+        ],
+        "plain": "If you have your own version of a script and AEM's built-in one exists too, does AEM run both and blend the output, or does yours just take over completely?",
+        "explain": "Script-level resolution is shadowing, not merging — first match under the search path (/apps before /libs) wins outright and the other script never executes. This is distinct from dialog inheritance via the Sling Resource Merger, which does merge.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "AEMaaCS: Sling Resource Merger",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/full-stack/sling-resource-merger"
+            },
+            {
+              "t": "Apache Sling: URL to Script Resolution",
+              "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/the-sling-engine/url-to-script-resolution.html"
+            }
+          ]
+        }
       },
       {
-        id: "q3",
-        section: "S2",
-        type: "single",
-        stem: "An HTL component reads a request parameter and must output it inside an href attribute.",
-        q: "Which HTL display context is correct?",
-        options: [
-          { id: "a", text: "text" },
-          { id: "b", text: "html" },
-          { id: "c", text: "uri" },
-          { id: "d", text: "attribute" },
+        "id": "q3",
+        "section": "S2",
+        "type": "single",
+        "stem": "An HTL component reads a request parameter and must output it inside an href attribute.",
+        "q": "Which HTL display context is correct?",
+        "options": [
+          {
+            "id": "a",
+            "text": "text"
+          },
+          {
+            "id": "b",
+            "text": "html"
+          },
+          {
+            "id": "c",
+            "text": "uri"
+          },
+          {
+            "id": "d",
+            "text": "attribute"
+          }
         ],
-        correct: ["c"],
-        plain: `You're printing a web address inside an <a href=...> tag \u2014 which "safety mode" should HTL use so the link doesn't break or become an injection risk?`,
-        explain:
-          '"uri" is the display context built for URL-valued output \u2014 it applies URL-appropriate escaping/validation. "text" would HTML-escape but not validate as a URL; "attribute" and "html" are for other contexts.',
+        "correct": [
+          "c"
+        ],
+        "plain": "You're printing a web address inside an <a href=...> tag — which \"safety mode\" should HTL use so the link doesn't break or become an injection risk?",
+        "explain": "uri validates the URI and outputs nothing if validation fails, and HTL applies it to href and src automatically unless you set another context. text escapes but doesn't validate a URL. html and attribute are for other places.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Explanation tightened to the spec's wording.",
+          "src": [
+            {
+              "t": "HTL Specification (Adobe)",
+              "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"
+            }
+          ]
+        }
       },
       {
-        id: "q4",
-        section: "S2",
-        type: "single",
-        stem: "A developer wants a Sling Model field to be populated only when present, with no exception thrown if it's missing, and this should apply to every field in the class by default.",
-        q: "Where is this declared?",
-        options: [
-          { id: "a", text: "On each field individually with @Optional" },
+        "id": "q4",
+        "section": "S2",
+        "type": "single",
+        "stem": "A developer wants a Sling Model field to be populated only when present, with no exception thrown if it's missing, and this should apply to every field in the class by default.",
+        "q": "Where is this declared?",
+        "options": [
           {
-            id: "b",
-            text: "In the class-level @Model annotation's defaultInjectionStrategy",
+            "id": "a",
+            "text": "On each field individually with @Optional"
           },
-          { id: "c", text: "In the OSGi config for the Sling Models bundle" },
-          { id: "d", text: "It cannot be set at the class level" },
+          {
+            "id": "b",
+            "text": "In the class-level @Model annotation's defaultInjectionStrategy"
+          },
+          {
+            "id": "c",
+            "text": "In the OSGi config for the Sling Models bundle"
+          },
+          {
+            "id": "d",
+            "text": "It cannot be set at the class level"
+          }
         ],
-        correct: ["b"],
-        plain: `How do you tell a whole class of Java fields "it's fine if some of these are missing, don't throw an error" instead of doing it one field at a time?`,
-        explain:
-          "@Model(defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL) sets the default for every field in the class; individual fields can still override with @Injected if a specific one is required.",
+        "correct": [
+          "b"
+        ],
+        "plain": "How do you tell a whole class of Java fields \"it's fine if some of these are missing, don't throw an error\" instead of doing it one field at a time?",
+        "explain": "@Model(defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL) sets the default for every field. A field that must still be present opts back in with @Required or injectionStrategy = REQUIRED. There's no OSGi switch for this, and @Optional is per field.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Explanation fixed: it named a non-existent @Injected annotation.",
+          "src": [
+            {
+              "t": "Apache Sling Models",
+              "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"
+            },
+            {
+              "t": "Sling Models @ValueMapValue javadoc",
+              "u": "https://sling.apache.org/apidocs/sling14/org/apache/sling/models/annotations/injectorspecific/ValueMapValue.html"
+            }
+          ]
+        }
       },
       {
-        id: "q5",
-        section: "S2",
-        type: "single",
-        stem: `A retailer needs the same "how it's made" story reused across the US site, a partner microsite, and a native app, with layout/branding differing per placement but the underlying content staying in sync.`,
-        q: "Which AEM feature fits best?",
-        options: [
-          { id: "a", text: "Live Copy (MSM)" },
-          { id: "b", text: "Content Fragment" },
-          { id: "c", text: "Experience Fragment" },
-          { id: "d", text: "Client Library" },
+        "id": "q5",
+        "section": "S2",
+        "type": "single",
+        "stem": "A retailer needs the same \"how it's made\" story reused across the US site, a partner microsite, and a native app, with layout/branding differing per placement but the underlying content staying in sync.",
+        "q": "Which AEM feature fits best?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Live Copy (MSM)"
+          },
+          {
+            "id": "b",
+            "text": "Content Fragment"
+          },
+          {
+            "id": "c",
+            "text": "Experience Fragment"
+          },
+          {
+            "id": "d",
+            "text": "Client Library"
+          }
         ],
-        correct: ["c"],
-        plain:
-          "You need the same content story reused across different sites/apps but wearing different clothes each time (layout differs per placement) \u2014 which building block is made for that?",
-        explain:
-          'Experience Fragments carry both content and presentation and are built to be exported/reused across channels including native apps. Content Fragments are channel-agnostic structured content without layout \u2014 closer, but the requirement that "layout/branding differ per placement" points to XF. Live Copy is for site/page structure reuse, not cross-channel content reuse.',
+        "correct": [
+          "b"
+        ],
+        "plain": "You need the same content story reused across different sites/apps but wearing different clothes each time (layout differs per placement) — which building block is made for that?",
+        "explain": "Adobe defines Content Fragments as presentation-agnostic: the channel owns the layout and design, so each placement styles the same content its own way while the content stays in one place. Experience Fragments carry content and layout and are used 'as is'. Live Copy syncs pages and sites, and a clientlib is CSS/JS.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Answer changed from Experience Fragment to Content Fragment.",
+          "src": [
+            {
+              "t": "Content Fragments and Experience Fragments",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/sites/content-fragments/understand-content-fragments-and-experience-fragments"
+            }
+          ]
+        }
       },
       {
-        id: "q6",
-        section: "S2",
-        type: "single",
-        stem: "A developer needs to enable a custom component for authoring within a specific page template, without affecting other templates that share the same components.",
-        q: "Where does this get configured?",
-        options: [
-          { id: "a", text: "The component's cq:componentGroup property" },
+        "id": "q6",
+        "section": "S2",
+        "type": "single",
+        "stem": "A developer needs to enable a custom component for authoring within a specific page template, without affecting other templates that share the same components.",
+        "q": "Where does this get configured?",
+        "options": [
           {
-            id: "b",
-            text: "The Layout Container policy for that specific template",
+            "id": "a",
+            "text": "The component's cq:componentGroup property"
           },
-          { id: "c", text: "The dispatcher farm config" },
-          { id: "d", text: "The component's dialog.xml" },
+          {
+            "id": "b",
+            "text": "The Layout Container policy for that specific template"
+          },
+          {
+            "id": "c",
+            "text": "The dispatcher farm config"
+          },
+          {
+            "id": "d",
+            "text": "The component's dialog.xml"
+          }
         ],
-        correct: ["b"],
-        plain:
-          "You want a custom component to show up as an option on only one specific page template, not every template that could use it \u2014 where do you flip that switch?",
-        explain:
-          "Component availability per-template is controlled through the Layout Container's policy (Allowed Components) on that template \u2014 this is template-scoped. componentGroup only controls where it appears in the component browser, not whether it's allowed.",
+        "correct": [
+          "b"
+        ],
+        "plain": "You want a custom component to show up as an option on only one specific page template, not every template that could use it — where do you flip that switch?",
+        "explain": "Component availability per-template is controlled through the Layout Container's policy (Allowed Components) on that template — this is template-scoped. componentGroup only controls where it appears in the component browser, not whether it's allowed.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "Using Core Components",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/get-started/using"
+            },
+            {
+              "t": "AEM: Editable Page Templates",
+              "u": "https://experienceleague.adobe.com/docs/experience-manager-65/developing/platform/templates/page-templates-editable.html?lang=en"
+            }
+          ]
+        }
       },
       {
-        id: "q7",
-        section: "S1",
-        type: "single",
-        stem: "A developer needs one OSGi configuration per instance of a reusable service \u2014 e.g., one config per external API endpoint the service talks to \u2014 where each instance can be added/removed independently at runtime.",
-        q: "Which configuration type fits?",
-        options: [
-          { id: "a", text: "A single Managed Service config" },
-          { id: "b", text: "A Factory Configuration" },
-          { id: "c", text: "A bundle-level MANIFEST property" },
-          { id: "d", text: "A repoinit script" },
+        "id": "q7",
+        "section": "S1",
+        "type": "single",
+        "stem": "A developer needs one OSGi configuration per instance of a reusable service — e.g., one config per external API endpoint the service talks to — where each instance can be added/removed independently at runtime.",
+        "q": "Which configuration type fits?",
+        "options": [
+          {
+            "id": "a",
+            "text": "A single Managed Service config"
+          },
+          {
+            "id": "b",
+            "text": "A Factory Configuration"
+          },
+          {
+            "id": "c",
+            "text": "A bundle-level MANIFEST property"
+          },
+          {
+            "id": "d",
+            "text": "A repoinit script"
+          }
         ],
-        correct: ["b"],
-        plain:
-          "You need several separate, independently-managed copies of the same kind of settings (like one per API you talk to) inside OSGi \u2014 what's that pattern called?",
-        explain:
-          'Factory Configurations allow multiple independent instances of the same config PID, each producing its own service instance \u2014 exactly the "one config per endpoint" pattern. A Managed Service config is a single instance.',
+        "correct": [
+          "b"
+        ],
+        "plain": "You need several separate, independently-managed copies of the same kind of settings (like one per API you talk to) inside OSGi — what's that pattern called?",
+        "explain": "Factory Configurations allow multiple independent instances of the same config PID, each producing its own service instance — exactly the \"one config per endpoint\" pattern. A Managed Service config is a single instance.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "AEMaaCS: Configuring OSGi",
+              "u": "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/implementing/deploying/configuring-osgi.html"
+            }
+          ]
+        }
       },
       {
-        id: "q8",
-        section: "S1",
-        type: "single",
-        stem: "A team built CSS-based style variants for a component and wants content authors to pick from them in the dialog, scoped to how that component is policy-configured per site section.",
-        q: "Where should the style options be registered?",
-        options: [
-          { id: "a", text: "Default CSS Classes field on the page policy" },
+        "id": "q8",
+        "section": "S1",
+        "type": "single",
+        "stem": "A team built CSS-based style variants for a component and wants content authors to pick from them in the dialog, scoped to how that component is policy-configured per site section.",
+        "q": "Where should the style options be registered?",
+        "options": [
           {
-            id: "b",
-            text: "Default CSS Classes field on the component's own policy",
+            "id": "a",
+            "text": "Default CSS Classes field on the page policy"
           },
           {
-            id: "c",
-            text: "Allowed Styles (Group Name / Style Name pairs) on the component's policy",
+            "id": "b",
+            "text": "Default CSS Classes field on the component's own policy"
           },
           {
-            id: "d",
-            text: "Allowed Styles on the main Layout Container policy",
+            "id": "c",
+            "text": "Allowed Styles (Group Name / Style Name pairs) on the component's policy"
           },
+          {
+            "id": "d",
+            "text": "Allowed Styles on the main Layout Container policy"
+          }
         ],
-        correct: ["c"],
-        plain:
-          "You built some CSS look-and-feel options and want editors to pick between them in the sidebar \u2014 where do those choices actually get registered?",
-        explain:
-          "Style System variants that authors choose between belong in Allowed Styles on the component's own policy, grouped by Group Name with individual Style Names \u2014 this is what populates the Styles tab in the dialog. Default CSS Classes applies one fixed class with no author choice.",
+        "correct": [
+          "c"
+        ],
+        "plain": "You built some CSS look-and-feel options and want editors to pick between them in the sidebar — where do those choices actually get registered?",
+        "explain": "Style System variants that authors choose between belong in Allowed Styles on the component's own policy, grouped by Group Name with individual Style Names — this is what populates the Styles tab in the dialog. Default CSS Classes applies one fixed class with no author choice.",
+        "audit": {
+          "ver": "partial",
+          "note": "Allowed Styles (group name, style name, CSS classes) is confirmed. Default CSS Classes wasn't on the pages checked.",
+          "src": [
+            {
+              "t": "AEMaaCS: Style System",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/authoring/page-editor/style-system"
+            },
+            {
+              "t": "Using Core Components",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/get-started/using"
+            }
+          ]
+        }
       },
       {
-        id: "q9",
-        section: "S1",
-        type: "single",
-        stem: "A developer wants a dedicated log file for a custom package, separate from error.log.",
-        q: "Where should the new logger configuration node live?",
-        options: [
+        "id": "q9",
+        "section": "S1",
+        "type": "single",
+        "stem": "On AEMaaCS, a developer wants DEBUG output for the package com.example.feed to show up in the logs downloaded from Cloud Manager.",
+        "q": "Which configuration works?",
+        "options": [
           {
-            id: "a",
-            text: "/apps/<project>/config (an OSGi config node for org.apache.sling.commons.log.LogManager.factory.config)",
+            "id": "a",
+            "text": "A Sling LogManager logger config (…LogManager.factory.config~feed.cfg.json) in ui.config, with the log file set to logs/error.log"
           },
-          { id: "b", text: "/apps/<project>/logs" },
-          { id: "c", text: "/var/log/<project>" },
-          { id: "d", text: "Directly editing sling.properties" },
+          {
+            "id": "b",
+            "text": "The same logger config, but writing to logs/feed.log so it gets its own file"
+          },
+          {
+            "id": "c",
+            "text": "A node under /var/log/feed"
+          },
+          {
+            "id": "d",
+            "text": "Editing sling.properties on the Author pod"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "You want your own package to write to its own log file instead of dumping into the main error log \u2014 where does that setup live?",
-        explain: `Custom loggers are OSGi Factory Configurations for the Sling Log Manager, deployed as config nodes (typically under /apps/<project>/config or /config in the repo structure) \u2014 not a "/logs" content node, which doesn't control logging at all.`,
+        "correct": [
+          "a"
+        ],
+        "plain": "On the cloud version, you want extra logging for your own code to show up in the logs you download. Where does that output have to go?",
+        "explain": "Adobe: AEMaaCS doesn't support custom log files, and Java logs are only accessible when written to error.log. You still add a logger config for your package, pointed at logs/error.log. (b) works on 6.5 but the file is unreachable on AEMaaCS. (c) and (d) don't configure logging.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Rewritten: AEMaaCS doesn't support custom log files.",
+          "src": [
+            {
+              "t": "AEMaaCS: Debugging using logs",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
+            }
+          ]
+        }
       },
       {
-        id: "q10",
-        section: "S3",
-        type: "single",
-        stem: "A developer is defining a version number that both the core and ui.apps modules need to reference consistently.",
-        q: "Where should that property be declared in a standard AEM Maven multi-module project?",
-        options: [
-          { id: "a", text: "<properties> in the parent (root) pom.xml" },
-          { id: "b", text: "<properties> in core/pom.xml only" },
-          { id: "c", text: "<properties> in ui.apps/pom.xml only" },
-          { id: "d", text: "A separate properties.xml file" },
+        "id": "q10",
+        "section": "S3",
+        "type": "single",
+        "stem": "A developer is defining a version number that both the core and ui.apps modules need to reference consistently.",
+        "q": "Where should that property be declared in a standard AEM Maven multi-module project?",
+        "options": [
+          {
+            "id": "a",
+            "text": "<properties> in the parent (root) pom.xml"
+          },
+          {
+            "id": "b",
+            "text": "<properties> in core/pom.xml only"
+          },
+          {
+            "id": "c",
+            "text": "<properties> in ui.apps/pom.xml only"
+          },
+          {
+            "id": "d",
+            "text": "A separate properties.xml file"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "You've got a version number both your Java module and your content-package module need \u2014 where's the one place to define it so both see it?",
-        explain:
-          "Properties meant to be shared/inherited across modules belong in the parent pom's <properties> section \u2014 child modules inherit it automatically. Declaring it in one child module doesn't make it visible to siblings.",
+        "correct": [
+          "a"
+        ],
+        "plain": "You've got a version number both your Java module and your content-package module need — where's the one place to define it so both see it?",
+        "explain": "Properties meant to be shared/inherited across modules belong in the parent pom's <properties> section — child modules inherit it automatically. Declaring it in one child module doesn't make it visible to siblings.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "Using the AEM Project Archetype",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/developing/archetype/using"
+            }
+          ]
+        }
       },
       {
-        id: "q11",
-        section: "S3",
-        type: "single",
-        stem: "A developer is generating a new AEMaaCS project from the official archetype for a React-based Single Page Application.",
-        q: "What value goes in the frontendModule archetype property?",
-        options: [
-          { id: "a", text: "general" },
-          { id: "b", text: "webpack" },
-          { id: "c", text: "react" },
-          { id: "d", text: "spa" },
+        "id": "q11",
+        "section": "S3",
+        "type": "single",
+        "stem": "A developer generates a project from the AEM Project Archetype with frontendModule=general.",
+        "q": "What does that produce?",
+        "options": [
+          {
+            "id": "a",
+            "text": "A Webpack-based ui.frontend module that builds the site's CSS and JS into clientlibs"
+          },
+          {
+            "id": "b",
+            "text": "A React single-page app wired to the SPA Editor"
+          },
+          {
+            "id": "c",
+            "text": "The Dispatcher configuration module"
+          },
+          {
+            "id": "d",
+            "text": "A second Java bundle for front-end Sling Models"
+          }
         ],
-        correct: ["c"],
-        plain: `You're spinning up a new React project with AEM's official generator \u2014 what value goes in for "which frontend framework"?`,
-        explain: `The archetype's frontendModule property accepts "react" or "angular" to scaffold a SPA-ready ui.frontend module; "general" scaffolds a standard server-rendered ui.frontend with plain webpack tooling and no framework.`,
+        "correct": [
+          "a"
+        ],
+        "plain": "You create a project with Adobe's generator and pick the 'general' front-end option. What do you get?",
+        "explain": "Adobe describes the general ui.frontend as a Webpack-based front-end build. Version note: older archetype releases also accepted react and angular, but the current archetype lists only general or none. Dispatcher config is its own module, and Java code goes in core.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Rewritten: the current archetype only offers frontendModule general or none.",
+          "src": [
+            {
+              "t": "Using the AEM Project Archetype",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/developing/archetype/using"
+            },
+            {
+              "t": "AEM Project Archetype (Adobe GitHub)",
+              "u": "https://github.com/Adobe/aem-project-archetype"
+            }
+          ]
+        }
       },
       {
-        id: "q12",
-        section: "S3",
-        type: "single",
-        stem: "A front-end developer wants to build and style components against AEM's real rendered HTML output, without a full AEM instance running locally for every CSS tweak.",
-        q: "What should be configured in the ui.frontend module to support this?",
-        options: [
-          { id: "a", text: "AEM's workflow engine" },
+        "id": "q12",
+        "section": "S3",
+        "type": "single",
+        "stem": "In an archetype-based project, a developer needs a Publish-only OSGi configuration.",
+        "q": "Which module should it go in?",
+        "options": [
           {
-            id: "b",
-            text: "AEM's server-side rendering output as the styling target (via the general frontendModule / webpack setup)",
+            "id": "a",
+            "text": "core"
           },
-          { id: "c", text: "Automated component deployment" },
-          { id: "d", text: "A dispatcher flush agent" },
+          {
+            "id": "b",
+            "text": "ui.apps"
+          },
+          {
+            "id": "c",
+            "text": "ui.config"
+          },
+          {
+            "id": "d",
+            "text": "ui.content"
+          }
         ],
-        correct: ["b"],
-        plain:
-          'You want to write CSS against what a page actually looks like when AEM renders it, not a guess \u2014 what has to be set up so your build can "see" real AEM output?',
-        explain:
-          "The general ui.frontend setup is built to style against AEM's actual server-rendered markup (pulled via a proxy/build step), so CSS is developed against real output rather than a mockup.",
+        "correct": [
+          "c"
+        ],
+        "plain": "You need a setting that only applies on Publish. Which part of the project holds settings like that?",
+        "explain": "Adobe: ui.config contains the runmode-specific OSGi configs (for example osgiconfig/config.publish). core is the Java bundle, ui.apps holds components, templates and clientlibs, and ui.content holds content.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Rewritten: the original item's 'style against rendered markup' setup isn't described in Adobe's archetype docs.",
+          "src": [
+            {
+              "t": "Using the AEM Project Archetype",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/developing/archetype/using"
+            }
+          ]
+        }
       },
       {
-        id: "q13",
-        section: "S4",
-        type: "single",
-        stem: "In AEM as a Cloud Service, a client needs a feature that explicitly clears specific cached resources from the Dispatcher cache on demand, from within custom application code.",
-        q: "What is the preferred approach?",
-        options: [
+        "id": "q13",
+        "section": "S4",
+        "type": "single",
+        "stem": "In AEM as a Cloud Service, a client needs a feature that explicitly clears specific cached resources from the Dispatcher cache on demand, from within custom application code.",
+        "q": "What is the preferred approach?",
+        "options": [
           {
-            id: "a",
-            text: "A custom servlet that opens a raw HTTP connection to the dispatcher",
+            "id": "a",
+            "text": "A custom servlet that opens a raw HTTP connection to the Dispatcher"
           },
           {
-            id: "b",
-            text: "The Replication API combined with a Dispatcher Flush replication agent",
+            "id": "b",
+            "text": "Sling Content Distribution (SCD) invalidation, triggered from Author"
           },
           {
-            id: "c",
-            text: "Manually deleting files from the dispatcher cache directory",
+            "id": "c",
+            "text": "The Replication API invoking the publish Dispatcher flush replication agent"
           },
-          { id: "d", text: "Restarting the publish instance" },
+          {
+            "id": "d",
+            "text": "Restarting the publish instance"
+          }
         ],
-        correct: ["b"],
-        plain: `You need a "clear this cached page right now" feature in your code \u2014 what's the actual supported cloud way to do that (not the old on-prem trick)?`,
-        explain:
-          "The supported pattern is to trigger replication (via the Replication API) to a Dispatcher Flush agent, which issues the correct invalidation request \u2014 this is portable across environments and doesn't assume direct filesystem or network access to the dispatcher, which AEMaaCS doesn't expose the same way on-prem did.",
+        "correct": [
+          "b"
+        ],
+        "plain": "You need a 'clear this cached page now' feature on the cloud version. Which way does Adobe prefer?",
+        "explain": "Adobe's AEMaaCS replication doc lists two ways to invalidate explicitly: SCD invalidation from Author (the preferred method), or the Replication API invoking the publish Dispatcher flush agent. So (c) works but isn't the preferred answer. Raw HTTP calls and restarts aren't supported patterns.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Answer changed: Adobe's preferred method is SCD invalidation; the flush agent is the alternative.",
+          "src": [
+            {
+              "t": "AEMaaCS: Replication",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/operations/replication"
+            }
+          ]
+        }
       },
       {
-        id: "q14",
-        section: "S4",
-        type: "single",
-        stem: "A developer just deployed a new custom Oak index definition and needs it applied to existing content, not just new writes going forward.",
-        q: "What triggers this?",
-        options: [
+        "id": "q14",
+        "section": "S4",
+        "type": "single",
+        "stem": "On AEM 6.5, a developer adds a new property to an existing Lucene index definition. Existing content must become searchable by that property too.",
+        "q": "What makes Oak rebuild the index over existing content?",
+        "options": [
           {
-            id: "a",
-            text: "Setting reindex: true (or reindexAsync) on the index definition node",
+            "id": "a",
+            "text": "Set reindex=true on the index definition node"
           },
-          { id: "b", text: "Restarting only the author instance" },
           {
-            id: "c",
-            text: "Nothing \u2014 indexes always apply retroactively automatically",
+            "id": "b",
+            "text": "Restart only the author instance"
           },
-          { id: "d", text: "Deleting and manually recreating /oak:index" },
+          {
+            "id": "c",
+            "text": "Nothing; changes to an existing definition apply to old content automatically"
+          },
+          {
+            "id": "d",
+            "text": "Delete /oak:index and recreate it by hand"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "You added a new search index definition, but old content doesn't show up in it yet \u2014 what do you flip to make AEM go back and index the old stuff too?",
-        explain:
-          "A reindex is triggered by setting the reindex property (true) on the index definition, which causes Oak to rebuild the index against existing content; it isn't automatic just from deploying the definition.",
+        "correct": [
+          "a"
+        ],
+        "plain": "You changed an existing search index and old content needs to be indexed by the new rule. What do you flip?",
+        "explain": "Adobe 6.5: setting reindex to true triggers a full content reindex. A brand-new index is populated on deployment, but a changed one isn't rebuilt by itself. Restarts don't reindex, and deleting /oak:index removes every index. On AEMaaCS you deploy a new versioned definition instead.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Rewritten: Adobe says a new index is populated on deployment; reindex=true is for changing an existing one.",
+          "src": [
+            {
+              "t": "AEM 6.5: Oak Queries and Indexing",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/deploying/queries-and-indexing"
+            },
+            {
+              "t": "AEM 6.5: Troubleshooting Slow Queries",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/developing/bestpractices/troubleshooting-slow-queries"
+            }
+          ]
+        }
       },
       {
-        id: "q15",
-        section: "S4",
-        type: "multi",
-        stem: "Content published from Author is not appearing on Publish, and the replication queue shows a growing backlog.",
-        q: "Which two checks are appropriate first steps? (Choose two.)",
-        options: [
+        "id": "q15",
+        "section": "S4",
+        "type": "multi",
+        "stem": "On AEM 6.5, content published from Author isn't appearing on Publish, and the replication queue keeps growing.",
+        "q": "Which two checks are appropriate first steps? (Choose two.)",
+        "options": [
           {
-            id: "a",
-            text: "Confirm the replication agent to that publish instance is enabled and reachable",
+            "id": "a",
+            "text": "Check whether the agent's queue shows a blocked status"
           },
-          { id: "b", text: "Confirm the replication queue is not paused" },
-          { id: "c", text: "Reinstall the AEM Cloud SDK" },
-          { id: "d", text: "Rename the affected content pages" },
-          { id: "e", text: "Clear the browser cache on the author instance" },
+          {
+            "id": "b",
+            "text": "Confirm the target Publish instance is running and responding"
+          },
+          {
+            "id": "c",
+            "text": "Reinstall the AEM SDK"
+          },
+          {
+            "id": "d",
+            "text": "Rename the affected content pages"
+          },
+          {
+            "id": "e",
+            "text": "Clear the browser cache on the author instance"
+          }
         ],
-        correct: ["a", "b"],
-        plain:
-          "Published stuff isn't appearing live and there's a growing backlog \u2014 what are the two most obvious things to check first?",
-        explain:
-          "A growing, stuck queue points to either a disabled/unreachable agent or a paused queue \u2014 both are first-line, non-destructive checks. The other options don't address a replication backlog.",
+        "correct": [
+          "a",
+          "b"
+        ],
+        "plain": "On 6.5, published pages aren't showing up live and the queue keeps growing. What are the two first things to check?",
+        "explain": "Adobe's replication troubleshooting checks whether items are queuing and whether the queue shows blocked, then whether the Publish instance is running or unresponsive. The other options don't touch replication.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Options reworded to Adobe's documented first checks.",
+          "src": [
+            {
+              "t": "AEM 6.5: Troubleshooting Replication",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/configuring/troubleshoot-rep"
+            }
+          ]
+        }
       },
       {
-        id: "q16",
-        section: "S5",
-        type: "single",
-        stem: "A page that should be publicly accessible is returning a 403 on the publish tier.",
-        q: "Which log is the most direct place to start?",
-        options: [
-          { id: "a", text: "audit.log" },
+        "id": "q16",
+        "section": "S5",
+        "type": "single",
+        "stem": "A page that exists and is published returns 404 through the Dispatcher, but loads when requested directly from the Publish instance.",
+        "q": "Where do you look first?",
+        "options": [
           {
-            id: "b",
-            text: "dispatcher log (or access log, depending on where the block occurs)",
+            "id": "a",
+            "text": "audit.log"
           },
-          { id: "c", text: "workflow log" },
-          { id: "d", text: "error.log on author" },
+          {
+            "id": "b",
+            "text": "The Dispatcher log, for a 'blocked' entry and the filter rule number"
+          },
+          {
+            "id": "c",
+            "text": "The workflow log"
+          },
+          {
+            "id": "d",
+            "text": "error.log on Author"
+          }
         ],
-        correct: ["b"],
-        plain:
-          'A page that should be open to everyone is getting a "forbidden" error on the live site \u2014 which log do you check first?',
-        explain:
-          "A 403 on publish is most often a dispatcher-level block (filter rule) or an access-control issue visible in access logs \u2014 audit.log tracks content changes/permissions changes, not runtime request blocking, and author's error.log won't see a publish-tier request at all.",
+        "correct": [
+          "b"
+        ],
+        "plain": "A real, published page returns 'not found' through the cache server but works when you go straight to Publish. Which log do you check?",
+        "explain": "Adobe: requests the /filter doesn't accept are sent back with a 404, and the Dispatcher log shows them as blocked along with the matching rule. audit.log records changes, and Author's error.log never sees a Publish request.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Rewritten: Dispatcher filter blocks return 404, not 403.",
+          "src": [
+            {
+              "t": "Dispatcher: Configure AEM Dispatcher",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/dispatcher-configuration"
+            },
+            {
+              "t": "KB: Dispatcher filter rules blocking requests",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-34606"
+            }
+          ]
+        }
       },
       {
-        id: "q17",
-        section: "S5",
-        type: "single",
-        stem: "In AEM as a Cloud Service, publish runs as multiple ephemeral, auto-scaled pods behind a load balancer. A specific request failed intermittently and a developer needs to trace it.",
-        q: "Where should the developer look?",
-        options: [
+        "id": "q17",
+        "section": "S5",
+        "type": "single",
+        "stem": "In AEM as a Cloud Service, publish runs as multiple ephemeral, auto-scaled pods behind a load balancer. A specific request failed intermittently and a developer needs to trace it.",
+        "q": "Where should the developer look?",
+        "options": [
           {
-            id: "a",
-            text: "The error.log on whichever single publish pod is currently reachable",
+            "id": "a",
+            "text": "The error.log on whichever single publish pod is currently reachable"
           },
           {
-            id: "b",
-            text: "Aggregated logs via Cloud Manager's Log Viewer / log download, across all pods",
+            "id": "b",
+            "text": "Cloud Manager's Download Logs (or aio cloudmanager:tail-logs), which consolidate the service's logs across pods"
           },
-          { id: "c", text: "The dispatcher's local disk cache" },
-          { id: "d", text: "The Package Manager UI" },
+          {
+            "id": "c",
+            "text": "The Dispatcher's local disk cache"
+          },
+          {
+            "id": "d",
+            "text": "The Package Manager UI"
+          }
         ],
-        correct: ["b"],
-        plain:
-          "Your cloud site runs on several interchangeable server copies at once, and one of them threw an error \u2014 where do you actually go to find it?",
-        explain:
-          "Because publish pods are ephemeral and requests are load-balanced across them, a single pod's local log view is unreliable \u2014 Cloud Manager aggregates and retains logs across pods, which is the supported way to trace a request that could have landed anywhere.",
+        "correct": [
+          "b"
+        ],
+        "plain": "Your cloud site runs on several interchangeable server copies at once, and one of them threw an error — where do you actually go to find it?",
+        "explain": "Adobe: AEMaaCS logs are consolidated into one log per service even when different pods write them, and each line carries a pod ID. One pod's view can miss the request.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Option reworded: there's no 'Log Viewer'; Adobe documents Download Logs and the aio CLI.",
+          "src": [
+            {
+              "t": "AEMaaCS: Debugging using logs",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
+            }
+          ]
+        }
       },
       {
-        id: "q18",
-        section: "S1",
-        type: "single",
-        stem: "A developer disabled a component via OSGi (removed its service registration) and needs to confirm it via the Felix Web Console.",
-        q: "Which console view shows a runtime-registered service and its state?",
-        options: [
-          { id: "a", text: "The Components tab" },
-          { id: "b", text: "The Bundle Resource Provider tab" },
-          { id: "c", text: "Package Manager" },
-          { id: "d", text: "CRXDE Lite" },
+        "id": "q18",
+        "section": "S1",
+        "type": "single",
+        "stem": "A developer disabled a component via OSGi (removed its service registration) and needs to confirm it via the Felix Web Console.",
+        "q": "Which console view shows a runtime-registered service and its state?",
+        "options": [
+          {
+            "id": "a",
+            "text": "The Components tab"
+          },
+          {
+            "id": "b",
+            "text": "The Bundle Resource Provider tab"
+          },
+          {
+            "id": "c",
+            "text": "Package Manager"
+          },
+          {
+            "id": "d",
+            "text": "CRXDE Lite"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "You turned a piece of backend code off through the admin console \u2014 which tab actually confirms it's really off?",
-        explain:
-          "The Components tab (Declarative Services) lists registered OSGi components with their state (active/disabled/unsatisfied) and lets you enable/disable them directly. Bundle Resource Provider is unrelated \u2014 it exposes bundle-embedded resources to the resource resolver.",
+        "correct": [
+          "a"
+        ],
+        "plain": "You turned a piece of backend code off through the admin console — which tab actually confirms it's really off?",
+        "explain": "The Components tab (Declarative Services) lists registered OSGi components with their state (active/disabled/unsatisfied) and lets you enable/disable them directly. Bundle Resource Provider is unrelated — it exposes bundle-embedded resources to the resource resolver.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "Debugging AEM SDK: OSGi web console",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-sdk/osgi-web-consoles"
+            }
+          ]
+        }
       },
       {
-        id: "q19",
-        section: "S2",
-        type: "single",
-        gapTopic: "cfm",
-        stem: 'A developer needs to programmatically read structured fields (e.g., a "headline" text field, an image reference) from a Content Fragment inside a servlet.',
-        q: "Which API is the correct fit?",
-        options: [
-          { id: "a", text: "The Content Fragment API (com.adobe.cq.dam.cfm)" },
-          { id: "b", text: "The general Asset API only" },
-          { id: "c", text: "Direct JCR PropertyIterator traversal" },
-          { id: "d", text: "The Replication API" },
+        "id": "q19",
+        "section": "S2",
+        "type": "single",
+        "gapTopic": "cfm",
+        "stem": "A developer needs to programmatically read structured fields (e.g., a \"headline\" text field, an image reference) from a Content Fragment inside a servlet.",
+        "q": "Which API is the correct fit?",
+        "options": [
+          {
+            "id": "a",
+            "text": "The Content Fragment API (com.adobe.cq.dam.cfm)"
+          },
+          {
+            "id": "b",
+            "text": "The general Asset API only"
+          },
+          {
+            "id": "c",
+            "text": "Direct JCR PropertyIterator traversal"
+          },
+          {
+            "id": "d",
+            "text": "The Replication API"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "You've got structured content (a headline field, an image field) in a Content Fragment and need to read those fields in your own Java code \u2014 which toolkit is built for that?",
-        explain:
-          "The Content Fragment API is purpose-built to read a fragment's model-defined elements/fields programmatically. The Asset API is for DAM asset metadata generally, not fragment-specific structured fields.",
+        "correct": [
+          "a"
+        ],
+        "plain": "You've got structured content (a headline field, an image field) in a Content Fragment and need to read those fields in your own Java code — which toolkit is built for that?",
+        "explain": "The Content Fragment API is purpose-built to read a fragment's model-defined elements/fields programmatically. The Asset API is for DAM asset metadata generally, not fragment-specific structured fields.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "AEMaaCS: Customizing Content Fragments (API)",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/configuring-and-extending/content-fragments-customizing"
+            }
+          ]
+        }
       },
       {
-        id: "q20",
-        section: "S2",
-        type: "single",
-        gapTopic: "spa",
-        stem: "A React component in a SPA Editor-integrated app needs to be author-editable in-context, with its content driven by AEM.",
-        q: "What must the component do to participate?",
-        options: [
+        "id": "q20",
+        "section": "S2",
+        "type": "single",
+        "gapTopic": "spa",
+        "stem": "A React component in a SPA Editor-integrated app needs to be author-editable in-context, with its content driven by AEM.",
+        "q": "What must the component do to participate?",
+        "options": [
           {
-            id: "a",
-            text: "Use MapTo to bind it to a resource type, driven by the page model JSON",
+            "id": "a",
+            "text": "Use MapTo to bind it to a resource type, driven by the page model JSON"
           },
           {
-            id: "b",
-            text: "Use only client-side routing with no AEM integration",
+            "id": "b",
+            "text": "Use only client-side routing with no AEM integration"
           },
-          { id: "c", text: "Disable server-side rendering entirely" },
-          { id: "d", text: "Rely exclusively on the GraphQL endpoint" },
+          {
+            "id": "c",
+            "text": "Disable server-side rendering entirely"
+          },
+          {
+            "id": "d",
+            "text": "Rely exclusively on the GraphQL endpoint"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "You're building a React page AEM authors need to click into and edit directly \u2014 what has to be wired up so AEM knows which component maps to which content?",
-        explain:
-          "The SPA Editor SDK maps JSON nodes in the AEM page model to React/Angular components via MapTo against a resource type \u2014 that's what makes the component both content-driven and in-context editable. Currency note: Adobe now lists the SPA Editor as deprecated for new projects (still supported for existing ones), steering new work toward the Universal Editor \u2014 know the mechanism for the exam, but don't start a new project on it.",
+        "correct": [
+          "a"
+        ],
+        "plain": "You're building a React page AEM authors need to click into and edit directly — what has to be wired up so AEM knows which component maps to which content?",
+        "explain": "The SPA Editor SDK maps JSON nodes in the AEM page model to React/Angular components via MapTo against a resource type — that's what makes the component both content-driven and in-context editable. Currency note: Adobe now lists the SPA Editor as deprecated for new projects (still supported for existing ones), steering new work toward the Universal Editor — know the mechanism for the exam, but don't start a new project on it.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "Map SPA components to AEM components",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/getting-started-with-aem-headless/spa-editor/react/map-components"
+            },
+            {
+              "t": "AEMaaCS: SPA Editor Deprecation",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/hybrid/spa-editor-deprecation"
+            }
+          ]
+        }
       },
       {
-        id: "q21",
-        section: "S2",
-        type: "single",
-        gapTopic: "graphql",
-        stem: "A mobile app needs specific fields from a set of Content Fragments, fetched efficiently, with the query definition stored and reused server-side rather than sent raw each time.",
-        q: "Which approach fits?",
-        options: [
+        "id": "q21",
+        "section": "S2",
+        "type": "single",
+        "gapTopic": "graphql",
+        "stem": "A mobile app needs specific fields from a set of Content Fragments, fetched efficiently, with the query definition stored and reused server-side rather than sent raw each time.",
+        "q": "Which approach fits?",
+        "options": [
           {
-            id: "a",
-            text: "A persisted GraphQL query via /graphql/execute.json",
+            "id": "a",
+            "text": "A persisted GraphQL query via /graphql/execute.json"
           },
-          { id: "b", text: "The Query Builder JSON servlet" },
-          { id: "c", text: "The Sling Model Exporter" },
-          { id: "d", text: "JCR-SQL2 via the Query Builder debugger" },
+          {
+            "id": "b",
+            "text": "The Query Builder JSON servlet"
+          },
+          {
+            "id": "c",
+            "text": "The Sling Model Exporter"
+          },
+          {
+            "id": "d",
+            "text": "JCR-SQL2 via the Query Builder debugger"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "A mobile app needs specific fields pulled efficiently, and you want the request reusable/cacheable server-side rather than typed fresh each time \u2014 what's that approach?",
-        explain:
-          "Persisted GraphQL queries are stored server-side and invoked by name/path \u2014 this is the standard headless pattern for Content Fragment-driven APIs, and is more efficient and reusable than sending ad hoc queries.",
+        "correct": [
+          "a"
+        ],
+        "plain": "A mobile app needs specific fields pulled efficiently, and you want the request reusable/cacheable server-side rather than typed fresh each time — what's that approach?",
+        "explain": "Adobe: persisted queries are stored on the server and run with a GET to /graphql/execute.json/<config>/<query>, so responses can be cached at the Dispatcher and CDN. That's why Adobe recommends them over ad hoc POST queries.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Explanation tightened to Adobe's reasoning.",
+          "src": [
+            {
+              "t": "AEMaaCS: Persisted GraphQL queries",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/headless/graphql-api/persisted-queries"
+            }
+          ]
+        }
       },
       {
-        id: "q22",
-        section: "S2",
-        type: "single",
-        gapTopic: "i18n",
-        stem: "A component needs to output a translated label based on the current page's language root.",
-        q: "Which HTL mechanism is correct?",
-        options: [
+        "id": "q22",
+        "section": "S2",
+        "type": "single",
+        "gapTopic": "i18n",
+        "stem": "A component needs to output a translated label based on the current page's language root.",
+        "q": "Which HTL mechanism is correct?",
+        "options": [
           {
-            id: "a",
-            text: "The i18n global object / @ i18n expression option",
+            "id": "a",
+            "text": "The i18n global object / @ i18n expression option"
           },
           {
-            id: "b",
-            text: "Hardcoded strings switched with Java if/else per locale",
+            "id": "b",
+            "text": "Hardcoded strings switched with Java if/else per locale"
           },
-          { id: "c", text: "A Query Builder lookup against the dictionary" },
           {
-            id: "d",
-            text: "Translation handled only inside the Sling Model, never in HTL",
+            "id": "c",
+            "text": "A Query Builder lookup against the dictionary"
           },
+          {
+            "id": "d",
+            "text": "Translation handled only inside the Sling Model, never in HTL"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "You need a label on the page to automatically show up in the visitor's language \u2014 what's the built-in way to do that instead of hardcoding text?",
-        explain:
-          "HTL's i18n global object (e.g. ${'Read more' @ i18n}) resolves against dictionaries under /apps or /conf, keyed to the current page's language root \u2014 this is the standard mechanism, not manual locale branching.",
+        "correct": [
+          "a"
+        ],
+        "plain": "You need a label on the page to automatically show up in the visitor's language — what's the built-in way to do that instead of hardcoding text?",
+        "explain": "HTL's i18n option translates the string. Adobe's i18n docs say the language comes from the user's account preference or the locale of the requested page. Dictionaries are Sling i18n nodes (mix:language with jcr:language) found by search, wherever they're stored. Hand-written locale branching isn't the mechanism.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Explanation fixed: the old one claimed dictionaries live under /apps or /conf.",
+          "src": [
+            {
+              "t": "HTL Specification (Adobe)",
+              "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"
+            },
+            {
+              "t": "AEMaaCS: Internationalizing UI Strings",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/configuring-and-extending/internationalization/dev"
+            },
+            {
+              "t": "Apache Sling: i18n support",
+              "u": "https://sling.apache.org/documentation/bundles/internationalization-support-i18n.html"
+            }
+          ]
+        }
       },
       {
-        id: "q23",
-        section: "S1",
-        type: "single",
-        gapTopic: "repoinit",
-        stem: "A developer needs a service user created with specific ACLs, applied before any content packages install as part of deployment.",
-        q: "Where is this defined?",
-        options: [
+        "id": "q23",
+        "section": "S1",
+        "type": "single",
+        "gapTopic": "repoinit",
+        "stem": "A developer needs a service user created with specific ACLs, applied before any content packages install as part of deployment.",
+        "q": "Where is this defined?",
+        "options": [
           {
-            id: "a",
-            text: "A repoinit script referenced from the bundle's provisioning",
+            "id": "a",
+            "text": "A repoinit script in a RepositoryInitializer OSGi config, deployed with the project"
           },
-          { id: "b", text: "Manually via useradmin after deployment finishes" },
-          { id: "c", text: "Inside the component's dialog.xml" },
-          { id: "d", text: "Inside filter.xml only, with no separate script" },
+          {
+            "id": "b",
+            "text": "Manually via useradmin after deployment finishes"
+          },
+          {
+            "id": "c",
+            "text": "Inside the component's dialog.xml"
+          },
+          {
+            "id": "d",
+            "text": "Inside filter.xml only, with no separate script"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "Before any content installs, you need a service account created with specific permissions, ready to go \u2014 what script handles that?",
-        explain:
-          "repoinit is the scripted bootstrap mechanism for service users, ACLs, and node structure \u2014 it runs before content installs, which is exactly the ordering this scenario needs. Manual post-deploy setup isn't reproducible/deployable.",
+        "correct": [
+          "a"
+        ],
+        "plain": "Before any content installs, you need a service account created with specific permissions, ready to go — what script handles that?",
+        "explain": "Adobe's service-user tutorial creates the user and its ACLs with a repoinit script in an OSGi config. Sling runs repoinit while it sets up the repository, before the repository service is registered, so the user exists before other code uses the repository. Manual setup isn't reproducible.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Answer reworded: repoinit ships as an OSGi config, not 'bundle provisioning'.",
+          "src": [
+            {
+              "t": "AEMaaCS: Service Users (tutorial)",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/developing/advanced/service-users"
+            },
+            {
+              "t": "Apache Sling: Repository Initialization",
+              "u": "https://sling.apache.org/documentation/bundles/repository-initialization.html"
+            }
+          ]
+        }
       },
       {
-        id: "q24",
-        section: "S1",
-        type: "single",
-        gapTopic: "cloudmanager",
-        stem: "A code commit fails the Cloud Manager pipeline at the Code Quality stage.",
-        q: "What is the most likely cause?",
-        options: [
+        "id": "q24",
+        "section": "S1",
+        "type": "single",
+        "gapTopic": "cloudmanager",
+        "stem": "A code commit fails the Cloud Manager pipeline at the Code Quality stage.",
+        "q": "What is the most likely cause?",
+        "options": [
           {
-            id: "a",
-            text: "A SonarQube rule violation (e.g. a security hotspot) exceeding the quality gate threshold",
+            "id": "a",
+            "text": "A Critical quality gate failing, such as a Security rating below B"
           },
-          { id: "b", text: "A missing OSGi bundle at runtime" },
-          { id: "c", text: "A DNS misconfiguration" },
-          { id: "d", text: "An expired SSL certificate" },
+          {
+            "id": "b",
+            "text": "A missing OSGi bundle at runtime"
+          },
+          {
+            "id": "c",
+            "text": "A DNS misconfiguration"
+          },
+          {
+            "id": "d",
+            "text": "An expired SSL certificate"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "Your code got rejected by the pipeline before it even reached a real environment \u2014 what kind of automated check is probably why?",
-        explain:
-          "Cloud Manager's Code Quality stage runs automated SonarQube-based analysis with defined thresholds; exceeding them blocks the pipeline before it ever reaches deployment, which is unrelated to runtime or infrastructure issues like DNS/SSL.",
+        "correct": [
+          "a"
+        ],
+        "plain": "Your code got rejected by the pipeline before it even reached a real environment — what kind of automated check is probably why?",
+        "explain": "Adobe: code quality testing runs SonarQube plus OakPAL. Critical issues (Security rating below B, Reliability below D) fail the pipeline immediately; Important ones pause it for an override. Runtime and infrastructure problems aren't checked here.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Answer reworded to Adobe's gate terms.",
+          "src": [
+            {
+              "t": "Cloud Manager: Code Quality Testing",
+              "u": "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/test-results/code-quality-testing.html"
+            }
+          ]
+        }
       },
       {
-        id: "q25",
-        section: "S3",
-        type: "single",
-        gapTopic: "testing",
-        stem: "A developer wants to unit test a Sling Model's logic without deploying to a running AEM instance.",
-        q: "Which tool is the standard fit?",
-        options: [
+        "id": "q25",
+        "section": "S3",
+        "type": "single",
+        "gapTopic": "testing",
+        "stem": "A developer wants to unit test a Sling Model's logic without deploying to a running AEM instance.",
+        "q": "Which tool is the standard fit?",
+        "options": [
           {
-            id: "a",
-            text: "AEM Mocks (io.wcm.testing / Sling Mocks) with JUnit",
+            "id": "a",
+            "text": "AEM Mocks (io.wcm.testing / Sling Mocks) with JUnit"
           },
-          { id: "b", text: "Selenium" },
-          { id: "c", text: "Postman" },
-          { id: "d", text: "JMeter" },
+          {
+            "id": "b",
+            "text": "Selenium"
+          },
+          {
+            "id": "c",
+            "text": "Postman"
+          },
+          {
+            "id": "d",
+            "text": "JMeter"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "You want to test your Java logic without spinning up a whole AEM server for one test \u2014 what's the standard toolkit?",
-        explain:
-          "AEM Mocks (built on Sling Mocks) simulates a minimal resource/request context in-memory so Sling Models, servlets, and similar classes can be unit tested with JUnit \u2014 no running instance required. The other tools are for UI, manual API, or load testing respectively, not unit tests.",
+        "correct": [
+          "a"
+        ],
+        "plain": "You want to test your Java logic without spinning up a whole AEM server for one test — what's the standard toolkit?",
+        "explain": "AEM Mocks (built on Sling Mocks) simulates a minimal resource/request context in-memory so Sling Models, servlets, and similar classes can be unit tested with JUnit — no running instance required. The other tools are for UI, manual API, or load testing respectively, not unit tests.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "WKND tutorial: Unit Testing",
+              "u": "https://experienceleague.adobe.com/docs/experience-manager-learn/getting-started-wknd-tutorial-develop/project-archetype/unit-testing.html?lang=en"
+            }
+          ]
+        }
       },
       {
-        id: "q26",
-        section: "S3",
-        type: "single",
-        gapTopic: "querybuilder",
-        stem: "A developer needs a query joining across two node types, maintainable and efficient as code \u2014 not a simple UI-driven search.",
-        q: "Which is the better fit?",
-        options: [
-          { id: "a", text: "JCR-SQL2 via the Query Manager API" },
-          { id: "b", text: "The Query Builder predicate map" },
-          { id: "c", text: "XPath" },
-          { id: "d", text: "Manual traversal of the whole repository tree" },
+        "id": "q26",
+        "section": "S3",
+        "type": "single",
+        "gapTopic": "querybuilder",
+        "stem": "A Query Builder query behind a paginated list is slow because it counts every match to report a total.",
+        "q": "Which setting addresses that?",
+        "options": [
+          {
+            "id": "a",
+            "text": "p.guessTotal on the Query Builder query"
+          },
+          {
+            "id": "b",
+            "text": "Rewriting it in JCR-SQL2 and adding guessTotal there"
+          },
+          {
+            "id": "c",
+            "text": "Setting reindex=true on the matching index"
+          },
+          {
+            "id": "d",
+            "text": "Raising the Dispatcher cache level"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "You need a fairly complex search pulling together two kinds of content at once \u2014 is the simple drag-and-drop search tool enough, or do you need the full query language?",
-        explain:
-          "JCR-SQL2 supports full join semantics and is generally more efficient and maintainable for complex, code-driven queries. Query Builder is a simpler predicate-map API, well suited to UI/URL-driven search but not built for complex joins.",
+        "correct": [
+          "a"
+        ],
+        "plain": "A search behind a paged list is slow because it counts every result for the total. What setting stops the counting?",
+        "explain": "Adobe's slow-query guide: guessTotal stops Query Builder from counting every result, and it doesn't apply to JCR-SQL2 or XPath. Reindexing and Dispatcher settings don't change result counting.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Rewritten: Adobe's docs don't back the old 'JCR-SQL2 joins are more efficient' claim.",
+          "src": [
+            {
+              "t": "AEM 6.5: Troubleshooting Slow Queries",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/developing/bestpractices/troubleshooting-slow-queries"
+            }
+          ]
+        }
       },
       {
-        id: "q27",
-        section: "S4",
-        type: "single",
-        stem: "Adobe pushes a Maintenance Release to an AEMaaCS environment.",
-        q: "What should the developer's posture be?",
-        options: [
+        "id": "q27",
+        "section": "S4",
+        "type": "single",
+        "stem": "Adobe pushes a Maintenance Release to an AEMaaCS environment.",
+        "q": "What should the developer's posture be?",
+        "options": [
           {
-            id: "a",
-            text: "Verify critical customizations still behave correctly against the updated environment",
+            "id": "a",
+            "text": "Verify critical customizations still behave correctly against the updated environment"
           },
-          { id: "b", text: "Manually disable the release" },
           {
-            id: "c",
-            text: "Nothing \u2014 Maintenance Releases can never affect custom code",
+            "id": "b",
+            "text": "Manually disable the release"
           },
-          { id: "d", text: "Apply a manual 6.5-style patch instead" },
+          {
+            "id": "c",
+            "text": "Nothing — Maintenance Releases can never affect custom code"
+          },
+          {
+            "id": "d",
+            "text": "Apply a manual 6.5-style patch instead"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "Adobe silently patches your cloud environment \u2014 should you assume nothing could break, or is there something worth double-checking?",
-        explain:
-          "Even though Adobe manages and applies Maintenance Releases automatically, they carry bug fixes/security patches that can interact with customizations \u2014 verifying critical custom functionality afterward (ideally against staging first) is the responsible posture, not assuming zero impact.",
+        "correct": [
+          "a"
+        ],
+        "plain": "Adobe silently patches your cloud environment — should you assume nothing could break, or is there something worth double-checking?",
+        "explain": "Even though Adobe manages and applies Maintenance Releases automatically, they carry bug fixes/security patches that can interact with customizations — verifying critical custom functionality afterward (ideally against staging first) is the responsible posture, not assuming zero impact.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "AEMaaCS: AEM Version Updates",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/deploying/aem-version-updates"
+            }
+          ]
+        }
       },
       {
-        id: "q28",
-        section: "S4",
-        type: "single",
-        stem: "In an author clustering setup, one instance needs to be designated as responsible for centralized tasks like a DAM asset workflow launcher, to avoid duplicate processing.",
-        q: "What determines which instance takes that role?",
-        options: [
-          { id: "a", text: "Discovery Service leader election" },
+        "id": "q28",
+        "section": "S4",
+        "type": "single",
+        "stem": "In an AEM 6.5 author cluster, one instance is recognized as the cluster's leader for topology purposes.",
+        "q": "Which service handles cluster membership and the leader?",
+        "options": [
           {
-            id: "b",
-            text: "Manual configuration only, with no automatic mechanism",
+            "id": "a",
+            "text": "Apache Sling Discovery"
           },
-          { id: "c", text: "The Dispatcher" },
-          { id: "d", text: "Package Manager" },
+          {
+            "id": "b",
+            "text": "Manual configuration only, with no automatic mechanism"
+          },
+          {
+            "id": "c",
+            "text": "The Dispatcher"
+          },
+          {
+            "id": "d",
+            "text": "Package Manager"
+          }
         ],
-        correct: ["a"],
-        plain: `In a cluster of multiple author servers, something decides which one is "in charge" of certain jobs so two servers don't collide \u2014 what handles that?`,
-        explain:
-          "The Discovery Service handles cluster membership and leader election among instances, which is what centralized-task components (like certain workflow launchers) key off of to avoid duplicate execution across a cluster.",
+        "correct": [
+          "a"
+        ],
+        "plain": "In a cluster of author servers, one is recognized as the leader. Which built-in service handles membership and the leader?",
+        "explain": "Adobe: the Discovery Service runs on every instance, each cluster has one leader, and a new leader is chosen automatically when the old one leaves.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Stem trimmed to what Adobe documents (leader per cluster via Discovery).",
+          "src": [
+            {
+              "t": "AEM 6.5: Offloading Jobs",
+              "u": "https://experienceleague.adobe.com/docs/experience-manager-65/deploying/configuring/offloading.html?lang=en"
+            }
+          ]
+        }
       },
       {
-        id: "q29",
-        section: "S5",
-        type: "single",
-        stem: "An AEM component renders completely blank on the page. No exceptions appear in error.log, and there are no HTL errors.",
-        q: "What is the most useful next diagnostic step?",
-        options: [
+        "id": "q29",
+        "section": "S5",
+        "type": "single",
+        "stem": "An AEM component renders completely blank on the page. No exceptions appear in error.log, and there are no HTL errors.",
+        "q": "What is the most useful next diagnostic step?",
+        "options": [
           {
-            id: "a",
-            text: "Check the resource's actual properties in CRXDE Lite \u2014 confirm the expected content is really there",
+            "id": "a",
+            "text": "Check the resource's actual properties in CRXDE Lite — confirm the expected content is really there"
           },
-          { id: "b", text: "Restart the instance" },
-          { id: "c", text: "Clear the browser cache" },
-          { id: "d", text: "Rebuild the component from scratch" },
+          {
+            "id": "b",
+            "text": "Restart the instance"
+          },
+          {
+            "id": "c",
+            "text": "Clear the browser cache"
+          },
+          {
+            "id": "d",
+            "text": "Rebuild the component from scratch"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "A component renders as literally nothing, with no error anywhere \u2014 what's the most useful first thing to actually check?",
-        explain:
-          "Blank rendering with zero errors anywhere usually traces back to missing or empty content (an unset property, wrong path) rather than a code defect \u2014 checking the actual resource is a faster, more targeted diagnostic than restarting or rebuilding.",
+        "correct": [
+          "a"
+        ],
+        "plain": "A component renders as literally nothing, with no error anywhere — what's the most useful first thing to actually check?",
+        "explain": "Blank rendering with zero errors anywhere usually traces back to missing or empty content (an unset property, wrong path) rather than a code defect — checking the actual resource is a faster, more targeted diagnostic than restarting or rebuilding.",
+        "audit": {
+          "ver": "partial",
+          "note": "Reasoning item (check the content before rebuilding). No single Adobe page states this rule.",
+          "src": [
+            {
+              "t": "AEMaaCS: Debugging using logs",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
+            }
+          ]
+        }
       },
       {
-        id: "q30",
-        section: "S5",
-        type: "single",
-        stem: "A custom workflow process step fails intermittently under load, and the log shows JCR lock timeout exceptions.",
-        q: "Which log would show this most directly?",
-        options: [
-          { id: "a", text: "error.log" },
-          { id: "b", text: "access.log" },
-          { id: "c", text: "audit.log" },
-          { id: "d", text: "dispatcher log" },
+        "id": "q30",
+        "section": "S5",
+        "type": "single",
+        "stem": "A custom workflow process step fails intermittently under load, and the log shows JCR lock timeout exceptions.",
+        "q": "Which log would show this most directly?",
+        "options": [
+          {
+            "id": "a",
+            "text": "error.log"
+          },
+          {
+            "id": "b",
+            "text": "access.log"
+          },
+          {
+            "id": "c",
+            "text": "audit.log"
+          },
+          {
+            "id": "d",
+            "text": "dispatcher log"
+          }
         ],
-        correct: ["a"],
-        plain:
-          'A workflow step randomly fails only under load, mentioning a "lock timeout" \u2014 which log would actually show that?',
-        explain:
-          "Lock timeout exceptions are Java exceptions raised inside the running application and are captured in error.log \u2014 access/audit/dispatcher logs don't record internal repository-level exceptions like this.",
+        "correct": [
+          "a"
+        ],
+        "plain": "A workflow step randomly fails only under load, mentioning a \"lock timeout\" — which log would actually show that?",
+        "explain": "Lock timeout exceptions are Java exceptions raised inside the running application and are captured in error.log — access/audit/dispatcher logs don't record internal repository-level exceptions like this.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "AEMaaCS: Debugging using logs",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
+            }
+          ]
+        }
       },
       {
-        id: "q31",
-        section: "S1",
-        type: "single",
-        stem: "A developer is creating a proxy component's cq:dialog and wants it to inherit the Core Component's dialog fields, adding only a couple of extra fields on top.",
-        q: "Which property on the cq:dialog node makes this inheritance work?",
-        options: [
+        "id": "q31",
+        "section": "S1",
+        "type": "single",
+        "stem": "A developer creates a proxy for the Core Teaser and gives it its own cq:dialog with one extra field, expecting the Core dialog's fields to appear too.",
+        "q": "Where must sling:resourceSuperType be set for the dialogs to merge?",
+        "options": [
           {
-            id: "a",
-            text: "sling:resourceType, set to the proxy component's own path",
+            "id": "a",
+            "text": "On the proxy's cq:dialog node, pointing to the Core dialog"
           },
           {
-            id: "b",
-            text: "sling:resourceSuperType, set to the Core Component's dialog resource type",
+            "id": "b",
+            "text": "On the proxy component node, pointing to the Core Teaser"
           },
-          { id: "c", text: "cq:template" },
-          { id: "d", text: "jcr:primaryType" },
+          {
+            "id": "c",
+            "text": "On the template's structure node"
+          },
+          {
+            "id": "d",
+            "text": "Nowhere; dialogs never merge"
+          }
         ],
-        correct: ["b"],
-        plain:
-          "You made your own dialog and want it to automatically include the original component's fields plus a couple extra \u2014 what property makes that inheritance happen?",
-        explain:
-          "sling:resourceSuperType on the dialog node points to the Core Component's dialog, and the Sling Resource Merger uses that to merge in the parent's fields \u2014 the proxy only needs to define what it's adding or overriding.",
+        "correct": [
+          "b"
+        ],
+        "plain": "Your copy of a core component has its own dialog, and you want the original's fields included too. Where does the 'inherit from' property go?",
+        "explain": "Adobe: to extend a component, set sling:resourceSuperType on your component's definition. The Sling Resource Merger then merges cq:dialog along the resource-type hierarchy, so your dialog defines only what it adds or changes. In Adobe's example, the dialog node carries no supertype.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Answer changed: sling:resourceSuperType goes on the component node, not the dialog.",
+          "src": [
+            {
+              "t": "Extend a Core Component (tutorial)",
+              "u": "https://experienceleague.adobe.com/docs/experience-manager-learn/spa-react-tutorial/extend-component.html?lang=en"
+            },
+            {
+              "t": "AEMaaCS: Sling Resource Merger",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/full-stack/sling-resource-merger"
+            },
+            {
+              "t": "Using Core Components",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/get-started/using"
+            }
+          ]
+        }
       },
       {
-        id: "q32",
-        section: "S2",
-        type: "single",
-        stem: 'A Sling Model field needs to be injected from a resource property whose JCR name ("jcr:title") differs from the Java field name ("title").',
-        q: "How is this declared?",
-        options: [
-          { id: "a", text: '@ValueMapValue(name = "jcr:title")' },
-          { id: "b", text: '@Inject(field = "jcr:title")' },
-          { id: "c", text: "@Named alone, with no other annotation" },
-          { id: "d", text: "@PostConstruct" },
+        "id": "q32",
+        "section": "S2",
+        "type": "single",
+        "stem": "A Sling Model field needs to be injected from a resource property whose JCR name (\"jcr:title\") differs from the Java field name (\"title\").",
+        "q": "How is this declared?",
+        "options": [
+          {
+            "id": "a",
+            "text": "@ValueMapValue(name = \"jcr:title\")"
+          },
+          {
+            "id": "b",
+            "text": "@Inject(field = \"jcr:title\")"
+          },
+          {
+            "id": "c",
+            "text": "@Named alone, with no other annotation"
+          },
+          {
+            "id": "d",
+            "text": "@PostConstruct"
+          }
         ],
-        correct: ["a"],
-        plain:
-          'Your Java field is named "title" but the actual content property is "jcr:title" \u2014 how do you bridge that name mismatch for the injector?',
-        explain:
-          "@ValueMapValue accepts a name argument to point at a differently-named property. @PostConstruct is for post-injection computed logic, not property naming, and @Inject/@Named aren't the standard pairing for this in Sling Models.",
+        "correct": [
+          "a"
+        ],
+        "plain": "Your Java field is named \"title\" but the actual content property is \"jcr:title\" — how do you bridge that name mismatch for the injector?",
+        "explain": "@ValueMapValue accepts a name argument to point at a differently-named property. @PostConstruct is for post-injection computed logic, not property naming, and @Inject/@Named aren't the standard pairing for this in Sling Models.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "Sling Models @ValueMapValue javadoc",
+              "u": "https://sling.apache.org/apidocs/sling14/org/apache/sling/models/annotations/injectorspecific/ValueMapValue.html"
+            },
+            {
+              "t": "Apache Sling Models",
+              "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"
+            }
+          ]
+        }
       },
       {
-        id: "q33",
-        section: "S3",
-        type: "single",
-        stem: "Reviewing a dispatcher.any farm config, a developer sees a /statfileslevel property set under /cache.",
-        q: "What does this property control?",
-        options: [
+        "id": "q33",
+        "section": "S3",
+        "type": "single",
+        "stem": "Reviewing a dispatcher.any farm config, a developer sees a /statfileslevel property set under /cache.",
+        "q": "What does this property control?",
+        "options": [
           {
-            id: "a",
-            text: "How many directory levels up the dispatcher checks for a newer .stat file to determine cache staleness",
+            "id": "a",
+            "text": "How many directory levels up the dispatcher checks for a newer .stat file to determine cache staleness"
           },
-          { id: "b", text: "The SSL certificate chain depth" },
           {
-            id: "c",
-            text: "The number of retry attempts on a failed backend request",
+            "id": "b",
+            "text": "The SSL certificate chain depth"
           },
-          { id: "d", text: "Log file rotation depth" },
+          {
+            "id": "c",
+            "text": "The number of retry attempts on a failed backend request"
+          },
+          {
+            "id": "d",
+            "text": "Log file rotation depth"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "There's a dispatcher setting called statfileslevel \u2014 what does that number actually control?",
-        explain:
-          "/statfileslevel controls how many parent directory levels the dispatcher walks up looking for a .stat file that would mark cached content under that path as invalidated/stale.",
+        "correct": [
+          "a"
+        ],
+        "plain": "There's a dispatcher setting called statfileslevel — what does that number actually control?",
+        "explain": "/statfileslevel controls how many parent directory levels the dispatcher walks up looking for a .stat file that would mark cached content under that path as invalidated/stale.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "Dispatcher: Configure AEM Dispatcher",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/dispatcher-configuration"
+            }
+          ]
+        }
       },
       {
-        id: "q34",
-        section: "S4",
-        type: "single",
-        stem: "A team wants a non-production AEMaaCS Publish environment to scale down overnight to save cost.",
-        q: "Is this something a developer configures directly?",
-        options: [
+        "id": "q34",
+        "section": "S4",
+        "type": "single",
+        "stem": "A team wants a non-production AEMaaCS Publish environment to scale down overnight to save cost.",
+        "q": "Is this something a developer configures directly?",
+        "options": [
           {
-            id: "a",
-            text: "No \u2014 scaling in AEMaaCS is managed by the platform, not hand-configured by developers",
+            "id": "a",
+            "text": "No — scaling in AEMaaCS is managed by the platform, not hand-configured by developers"
           },
-          { id: "b", text: "Yes, via dispatcher.any" },
-          { id: "c", text: "Yes, via an OSGi configuration" },
-          { id: "d", text: "Yes, via a custom Sling servlet" },
+          {
+            "id": "b",
+            "text": "Yes, via dispatcher.any"
+          },
+          {
+            "id": "c",
+            "text": "Yes, via an OSGi configuration"
+          },
+          {
+            "id": "d",
+            "text": "Yes, via a custom Sling servlet"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "You want a non-prod cloud environment to spin down overnight to save money \u2014 do you configure that yourself, or does the platform handle it?",
-        explain:
-          "Autoscaling and capacity management in AEMaaCS are handled by the managed platform itself \u2014 a developer's job is to understand the topology exists, not to hand-tune scaling through dispatcher config, OSGi, or custom code.",
+        "correct": [
+          "a"
+        ],
+        "plain": "You want a non-prod cloud environment to spin down overnight to save money — do you configure that yourself, or does the platform handle it?",
+        "explain": "Autoscaling and capacity management in AEMaaCS are handled by the managed platform itself — a developer's job is to understand the topology exists, not to hand-tune scaling through dispatcher config, OSGi, or custom code.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "AEMaaCS: Architecture",
+              "u": "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/core-concepts/architecture.html?lang=en"
+            }
+          ]
+        }
       },
       {
-        id: "q35",
-        section: "S2",
-        type: "single",
-        stem: "A developer is registering a new Sling Servlet as an OSGi component and needs requests to it to automatically respect the AEM permissions of the resource being requested.",
-        q: "Which registration approach should be used, and why?",
-        options: [
+        "id": "q35",
+        "section": "S2",
+        "type": "single",
+        "stem": "A developer is registering a new Sling Servlet as an OSGi component and needs requests to it to automatically respect the AEM permissions of the resource being requested.",
+        "q": "Which registration approach should be used, and why?",
+        "options": [
           {
-            id: "a",
-            text: "sling.servlet.paths \u2014 path-based servlets inherit the requested resource's ACLs automatically",
+            "id": "a",
+            "text": "sling.servlet.paths — path-based servlets inherit the requested resource's ACLs automatically"
           },
           {
-            id: "b",
-            text: "sling.servlet.resourceTypes \u2014 the Sling Engine applies the resource's access control when resolving by resource type",
+            "id": "b",
+            "text": "sling.servlet.resourceTypes — the Sling Engine applies the resource's access control when resolving by resource type"
           },
-          { id: "c", text: "Either works identically for permission purposes" },
           {
-            id: "d",
-            text: "Neither \u2014 permissions must always be checked manually inside the servlet",
+            "id": "c",
+            "text": "Either works identically for permission purposes"
           },
+          {
+            "id": "d",
+            "text": "Neither — permissions must always be checked manually inside the servlet"
+          }
         ],
-        correct: ["b"],
-        plain:
-          "You're registering a backend endpoint (a servlet) and want it to automatically respect who's allowed to see what \u2014 which registration style makes that happen for free?",
-        explain:
-          "Registering by resourceType ties the servlet to a specific resource, so the Sling Engine enforces that resource's ACLs automatically \u2014 a user without read access can't invoke it. Path-based registration does not inherit any resource's ACLs the same way, which is why resourceType is the generally preferred, more secure approach.",
+        "correct": [
+          "b"
+        ],
+        "plain": "You're registering a backend endpoint (a servlet) and want it to automatically respect who's allowed to see what — which registration style makes that happen for free?",
+        "explain": "Registering by resourceType ties the servlet to a specific resource, so the Sling Engine enforces that resource's ACLs automatically — a user without read access can't invoke it. Path-based registration does not inherit any resource's ACLs the same way, which is why resourceType is the generally preferred, more secure approach.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "Apache Sling: Servlets and Scripts",
+              "u": "https://sling.apache.org/documentation/the-sling-engine/servlets.html"
+            }
+          ]
+        }
       },
       {
-        id: "q36",
-        section: "S2",
-        type: "single",
-        stem: "A component's client library needs a utility library's JS bundled directly into its own output, to minimize the number of HTTP requests on the page.",
-        q: "Which clientlib property achieves this?",
-        options: [
-          { id: "a", text: "dependencies" },
-          { id: "b", text: "embed" },
-          { id: "c", text: "allowProxy" },
-          { id: "d", text: "categories" },
+        "id": "q36",
+        "section": "S2",
+        "type": "single",
+        "stem": "A component's client library needs a utility library's JS bundled directly into its own output, to minimize the number of HTTP requests on the page.",
+        "q": "Which clientlib property achieves this?",
+        "options": [
+          {
+            "id": "a",
+            "text": "dependencies"
+          },
+          {
+            "id": "b",
+            "text": "embed"
+          },
+          {
+            "id": "c",
+            "text": "allowProxy"
+          },
+          {
+            "id": "d",
+            "text": "categories"
+          }
         ],
-        correct: ["b"],
-        plain:
-          "You want another library's CSS/JS squished directly into your own file (one network request) instead of loading as a separate file \u2014 which clientlib setting does that?",
-        explain:
-          "embed concatenates the referenced categories directly into the current clientlib's output \u2014 one request instead of several, and it is not transitive. dependencies keeps libraries separate, loading them as additional requests in the correct order, and is transitive.",
+        "correct": [
+          "b"
+        ],
+        "plain": "You want another library's CSS/JS squished directly into your own file (one network request) instead of loading as a separate file — which clientlib setting does that?",
+        "explain": "Adobe: embed copies the embedded code into this library's output, so one request serves both. dependencies keeps them separate, and the page links to each dependency's files. allowProxy and categories don't combine anything.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Explanation fixed: the 'transitive' claims aren't in Adobe's docs.",
+          "src": [
+            {
+              "t": "AEMaaCS: Client-Side Libraries",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/full-stack/clientlibs"
+            }
+          ]
+        }
       },
       {
-        id: "q37",
-        section: "S2",
-        type: "single",
-        stem: "A Sling Model needs to compute a derived field (e.g. a formatted date string) once, immediately after all injected fields have been populated.",
-        q: "Which annotation is used for this?",
-        options: [
-          { id: "a", text: "@PostConstruct" },
-          { id: "b", text: "@Optional" },
-          { id: "c", text: "@Via" },
-          { id: "d", text: "@Self" },
+        "id": "q37",
+        "section": "S2",
+        "type": "single",
+        "stem": "A Sling Model needs to compute a derived field (e.g. a formatted date string) once, immediately after all injected fields have been populated.",
+        "q": "Which annotation is used for this?",
+        "options": [
+          {
+            "id": "a",
+            "text": "@PostConstruct"
+          },
+          {
+            "id": "b",
+            "text": "@Optional"
+          },
+          {
+            "id": "c",
+            "text": "@Via"
+          },
+          {
+            "id": "d",
+            "text": "@Self"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "You need a Java field calculated once, right after all the real data has loaded in \u2014 what annotation marks a method to run at exactly that moment?",
-        explain:
-          "@PostConstruct marks a method to run after injection completes \u2014 exactly where derived/computed fields belong. @Optional, @Via, and @Self are injection-related annotations, not post-injection lifecycle hooks.",
+        "correct": [
+          "a"
+        ],
+        "plain": "You need a Java field calculated once, right after all the real data has loaded in — what annotation marks a method to run at exactly that moment?",
+        "explain": "@PostConstruct marks a method to run after injection completes — exactly where derived/computed fields belong. @Optional, @Via, and @Self are injection-related annotations, not post-injection lifecycle hooks.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "Apache Sling Models",
+              "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"
+            }
+          ]
+        }
       },
       {
-        id: "q38",
-        section: "S2",
-        type: "single",
-        stem: "A developer wants each item in a list to become its own <li> element, without an extra wrapping tag repeated per item.",
-        q: "Which HTL statement should be used?",
-        options: [
+        "id": "q38",
+        "section": "S2",
+        "type": "single",
+        "stem": "A developer wants each item in a list to become its own <li> element, without an extra wrapping tag repeated per item.",
+        "q": "Which HTL statement should be used?",
+        "options": [
           {
-            id: "a",
-            text: "data-sly-repeat \u2014 repeats the host element itself once per item",
+            "id": "a",
+            "text": "data-sly-repeat — repeats the host element itself once per item"
           },
           {
-            id: "b",
-            text: "data-sly-list \u2014 keeps a single host element, repeating only its inner content",
+            "id": "b",
+            "text": "data-sly-list — keeps a single host element, repeating only its inner content"
           },
-          { id: "c", text: "data-sly-test" },
-          { id: "d", text: "data-sly-use" },
+          {
+            "id": "c",
+            "text": "data-sly-test"
+          },
+          {
+            "id": "d",
+            "text": "data-sly-use"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "You're looping through a list in HTL and want each item to become its own separate <li> tag, not one <li> wrapping everything \u2014 which loop directive does that?",
-        explain:
-          "data-sly-repeat duplicates the element it's declared on for every item \u2014 exactly what's needed for one <li> per item. data-sly-list instead keeps a single host element and repeats only what's inside it, useful when you don't want the wrapping tag duplicated.",
+        "correct": [
+          "a"
+        ],
+        "plain": "You're looping through a list in HTL and want each item to become its own separate <li> tag, not one <li> wrapping everything — which loop directive does that?",
+        "explain": "data-sly-repeat duplicates the element it's declared on for every item — exactly what's needed for one <li> per item. data-sly-list instead keeps a single host element and repeats only what's inside it, useful when you don't want the wrapping tag duplicated.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "HTL Specification (Adobe)",
+              "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"
+            }
+          ]
+        }
       },
       {
-        id: "q39",
-        section: "S2",
-        type: "single",
-        stem: "A team is setting up structured content for reuse and needs to define the schema (fields, data types) once, then create multiple content items that follow it.",
-        q: "What defines the schema, and what is each individual content item called?",
-        options: [
+        "id": "q39",
+        "section": "S2",
+        "type": "single",
+        "stem": "A team is setting up structured content for reuse and needs to define the schema (fields, data types) once, then create multiple content items that follow it.",
+        "q": "What defines the schema, and what is each individual content item called?",
+        "options": [
           {
-            id: "a",
-            text: "A Content Fragment Model defines the schema; each item created from it is a Content Fragment",
+            "id": "a",
+            "text": "A Content Fragment Model defines the schema; each item created from it is a Content Fragment"
           },
           {
-            id: "b",
-            text: "A Content Fragment defines the schema; each item created from it is a Content Fragment Model",
+            "id": "b",
+            "text": "A Content Fragment defines the schema; each item created from it is a Content Fragment Model"
           },
-          { id: "c", text: "Both terms refer to the same thing" },
           {
-            id: "d",
-            text: "The schema is defined in a Content Fragment's dialog.xml",
+            "id": "c",
+            "text": "Both terms refer to the same thing"
           },
+          {
+            "id": "d",
+            "text": "The schema is defined in a Content Fragment's dialog.xml"
+          }
         ],
-        correct: ["a"],
-        plain: `There's a "template" for structured content (the fields and their types) and then the actual pieces of content built from that template \u2014 what's each one called?`,
-        explain:
-          "A Content Fragment Model is the reusable schema definition. A Content Fragment is an individual content instance authored against that model \u2014 the same relationship as a class and its instances.",
+        "correct": [
+          "a"
+        ],
+        "plain": "There's a \"template\" for structured content (the fields and their types) and then the actual pieces of content built from that template — what's each one called?",
+        "explain": "A Content Fragment Model is the reusable schema definition. A Content Fragment is an individual content instance authored against that model — the same relationship as a class and its instances.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "AEMaaCS: Customizing Content Fragments (API)",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/configuring-and-extending/content-fragments-customizing"
+            }
+          ]
+        }
       },
       {
-        id: "q40",
-        section: "S2",
-        type: "single",
-        stem: "A Sling Model's JSON export (via .model.json) needs a field's JSON property name to differ from the Java field name.",
-        q: "Which annotation controls this in the exported JSON specifically?",
-        options: [
-          { id: "a", text: '@JsonProperty("customName")' },
-          { id: "b", text: '@ValueMapValue(name = "customName")' },
-          { id: "c", text: "@Optional" },
-          { id: "d", text: "@Model(adaptables = ...)" },
+        "id": "q40",
+        "section": "S2",
+        "type": "single",
+        "stem": "A Sling Model's JSON export (via .model.json) needs a field's JSON property name to differ from the Java field name.",
+        "q": "Which annotation controls this in the exported JSON specifically?",
+        "options": [
+          {
+            "id": "a",
+            "text": "@JsonProperty(\"customName\")"
+          },
+          {
+            "id": "b",
+            "text": "@ValueMapValue(name = \"customName\")"
+          },
+          {
+            "id": "c",
+            "text": "@Optional"
+          },
+          {
+            "id": "d",
+            "text": "@Model(adaptables = ...)"
+          }
         ],
-        correct: ["a"],
-        plain:
-          'Your Java field is called "headline" but you want the exported JSON to show it as "title" \u2014 which annotation controls the name in the JSON output specifically (not the repository property)?',
-        explain:
-          "@JsonProperty (Jackson) controls the name used in the exported JSON output specifically \u2014 separate from @ValueMapValue's name, which controls which repository property is read. The two solve different problems and can be combined.",
+        "correct": [
+          "a"
+        ],
+        "plain": "Your Java field is called \"headline\" but you want the exported JSON to show it as \"title\" — which annotation controls the name in the JSON output specifically (not the repository property)?",
+        "explain": "@JsonProperty (Jackson) controls the name used in the exported JSON output specifically — separate from @ValueMapValue's name, which controls which repository property is read. The two solve different problems and can be combined.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "AEMaaCS: Enabling JSON Export",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/full-stack/components-templates/enabling-json-exporter"
+            }
+          ]
+        }
       },
       {
-        id: "q41",
-        section: "S2",
-        type: "single",
-        stem: "An author on a Live Copy page wants one specific component's content to diverge permanently from the blueprint, without breaking sync for the rest of the page.",
-        q: "What should the author do?",
-        options: [
+        "id": "q41",
+        "section": "S2",
+        "type": "single",
+        "stem": "An author on a Live Copy page wants one specific component's content to diverge permanently from the blueprint, without breaking sync for the rest of the page.",
+        "q": "What should the author do?",
+        "options": [
           {
-            id: "a",
-            text: "Break/cancel inheritance on that specific component",
+            "id": "a",
+            "text": "Break/cancel inheritance on that specific component"
           },
           {
-            id: "b",
-            text: "Delete the Live Copy relationship for the entire page",
+            "id": "b",
+            "text": "Delete the Live Copy relationship for the entire page"
           },
           {
-            id: "c",
-            text: "Exclude the whole page from the Rollout Configuration",
+            "id": "c",
+            "text": "Exclude the whole page from the Rollout Configuration"
           },
-          { id: "d", text: "Convert the page to a Language Copy" },
+          {
+            "id": "d",
+            "text": "Convert the page to a Language Copy"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "On a page that's synced from a master page (Live Copy), you want just ONE component to stop syncing and go its own way, without breaking sync for the rest \u2014 what do you do to just that component?",
-        explain:
-          "MSM lets inheritance be cancelled at a granular level, down to an individual component, so just that piece stops syncing from the blueprint while the rest of the page continues to inherit normally.",
+        "correct": [
+          "a"
+        ],
+        "plain": "On a page that's synced from a master page (Live Copy), you want just ONE component to stop syncing and go its own way, without breaking sync for the rest — what do you do to just that component?",
+        "explain": "MSM lets inheritance be cancelled at a granular level, down to an individual component, so just that piece stops syncing from the blueprint while the rest of the page continues to inherit normally.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "AEMaaCS: Multi Site Manager and Live Copy",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/administering/reusing-content/msm/overview"
+            }
+          ]
+        }
       },
       {
-        id: "q42",
-        section: "S2",
-        type: "single",
-        stem: "A developer is building a new Editable Template and needs authors to be able to add/remove components in some regions but not others.",
-        q: "Which template concept controls this?",
-        options: [
+        "id": "q42",
+        "section": "S2",
+        "type": "single",
+        "stem": "A developer is building a new Editable Template and needs authors to be able to add/remove components in some regions but not others.",
+        "q": "Which template concept controls this?",
+        "options": [
           {
-            id: "a",
-            text: "The Structure region (locked layout) vs. the non-structure / Initial Content areas (author-editable)",
+            "id": "a",
+            "text": "Locking/unlocking components in the template's Structure; authors change only unlocked parts, and adding components needs a container (paragraph system)"
           },
-          { id: "b", text: "The template's cq:allowedPaths property" },
-          { id: "c", text: "The dispatcher farm config" },
-          { id: "d", text: "The component's own dialog" },
+          {
+            "id": "b",
+            "text": "The template's cq:allowedPaths property"
+          },
+          {
+            "id": "c",
+            "text": "The Dispatcher farm config"
+          },
+          {
+            "id": "d",
+            "text": "The component's own dialog"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "You're building a page template and want some areas locked down while other areas are fully editable \u2014 what's the AEM concept that splits a template that way?",
-        explain:
-          "Editable Templates split into a locked Structure (the fixed layout authors can't change) and editable regions where authors can add/remove components \u2014 that structural split, not a component-level property, governs where authors have freedom.",
+        "correct": [
+          "a"
+        ],
+        "plain": "You're building a page template where some parts are fixed and other parts authors can change. What controls that split?",
+        "explain": "Adobe: Structure components can't be moved or deleted on pages. Unlocking one sets editable=true, and authors can edit only editable nodes and their children. Adding and removing components needs a paragraph system (the Layout Container). Initial Content only pre-fills new pages.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Answer reworded: it's locked vs unlocked Structure plus a paragraph system, not 'Initial Content areas'.",
+          "src": [
+            {
+              "t": "AEM: Editable Page Templates",
+              "u": "https://experienceleague.adobe.com/docs/experience-manager-65/developing/platform/templates/page-templates-editable.html?lang=en"
+            }
+          ]
+        }
       },
       {
-        id: "q43",
-        section: "S5",
-        type: "single",
-        stem: "An AEM author instance becomes unresponsive under load, with some requests hanging indefinitely.",
-        q: "What is the standard diagnostic artifact to capture, and where?",
-        options: [
+        "id": "q43",
+        "section": "S5",
+        "type": "single",
+        "stem": "An AEM author instance becomes unresponsive under load, with some requests hanging indefinitely.",
+        "q": "What is the standard diagnostic artifact to capture, and where?",
+        "options": [
           {
-            id: "a",
-            text: "A thread dump, via the Felix console's Status > Threads (or /system/console/threads)",
+            "id": "a",
+            "text": "Several thread dumps taken a few seconds apart"
           },
-          { id: "b", text: "A component dialog export" },
-          { id: "c", text: "The Package Manager's install history" },
-          { id: "d", text: "A Content Fragment Model export" },
+          {
+            "id": "b",
+            "text": "A component dialog export"
+          },
+          {
+            "id": "c",
+            "text": "The Package Manager's install history"
+          },
+          {
+            "id": "d",
+            "text": "A Content Fragment Model export"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "The server is hanging and some requests never finish \u2014 what do you grab to see what every thread is actually doing at that moment?",
-        explain:
-          "A thread dump snapshots every JVM thread's state at that moment \u2014 exactly what's needed to spot deadlocks or a stuck request. Multiple dumps a few seconds apart are typically needed to see a pattern, not just one.",
+        "correct": [
+          "a"
+        ],
+        "plain": "The server is hanging and some requests never finish — what do you grab to see what every thread is actually doing at that moment?",
+        "explain": "Adobe's thread-dump KB: request threads carry their start time in their name, so comparing dumps shows long-running requests and threads waiting on a lock. The other artifacts say nothing about hung threads.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Answer reworded: Adobe's KB doesn't give the Felix console path.",
+          "src": [
+            {
+              "t": "KB: AEM Thread Dump Analysis",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-16458"
+            }
+          ]
+        }
       },
       {
-        id: "q44",
-        section: "S5",
-        type: "single",
-        stem: "An AEM instance repeatedly crashes with OutOfMemoryError in error.log.",
-        q: "Which diagnostic artifact specifically helps identify what's consuming memory?",
-        options: [
+        "id": "q44",
+        "section": "S5",
+        "type": "single",
+        "stem": "An AEM instance repeatedly crashes with OutOfMemoryError in error.log.",
+        "q": "Which diagnostic artifact specifically helps identify what's consuming memory?",
+        "options": [
           {
-            id: "a",
-            text: "A heap dump, analyzed for retained objects and their sizes",
+            "id": "a",
+            "text": "A heap dump, analyzed for retained objects and their sizes"
           },
-          { id: "b", text: "A thread dump only" },
-          { id: "c", text: "The dispatcher access log" },
-          { id: "d", text: "The Replication Agent status page" },
+          {
+            "id": "b",
+            "text": "A thread dump only"
+          },
+          {
+            "id": "c",
+            "text": "The dispatcher access log"
+          },
+          {
+            "id": "d",
+            "text": "The Replication Agent status page"
+          }
         ],
-        correct: ["a"],
-        plain: `The server keeps crashing with an "out of memory" error \u2014 what do you capture to actually see what's eating the memory?`,
-        explain:
-          "A heap dump captures the state of every object on the JVM heap, letting you identify what's actually consuming memory. A thread dump shows what threads are doing, not memory contents, so it doesn't directly answer an OOM question.",
+        "correct": [
+          "a"
+        ],
+        "plain": "The server keeps crashing with an \"out of memory\" error — what do you capture to actually see what's eating the memory?",
+        "explain": "A heap dump captures the state of every object on the JVM heap, letting you identify what's actually consuming memory. A thread dump shows what threads are doing, not memory contents, so it doesn't directly answer an OOM question.",
+        "audit": {
+          "ver": "partial",
+          "note": "Adobe's KB says to capture a heap dump when a memory problem is suspected. How to analyze it wasn't in the pages checked.",
+          "src": [
+            {
+              "t": "KB: AEM Thread Dump Analysis",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-16458"
+            }
+          ]
+        }
       },
       {
-        id: "q45",
-        section: "S5",
-        type: "single",
-        stem: "A developer suspects an unindexed or inefficient query is slowing down a page.",
-        q: "Where would this typically first surface as a warning?",
-        options: [
+        "id": "q45",
+        "section": "S5",
+        "type": "single",
+        "stem": "A developer suspects an unindexed or inefficient query is slowing down a page.",
+        "q": "Where would this typically first surface as a warning?",
+        "options": [
           {
-            id: "a",
-            text: "The AEM error.log / query log, which flags traversal or slow queries",
+            "id": "a",
+            "text": "The AEM error.log / query log, which flags traversal or slow queries"
           },
-          { id: "b", text: "The dispatcher cache" },
-          { id: "c", text: "The Replication Agent queue" },
-          { id: "d", text: "The Package Manager" },
+          {
+            "id": "b",
+            "text": "The dispatcher cache"
+          },
+          {
+            "id": "c",
+            "text": "The Replication Agent queue"
+          },
+          {
+            "id": "d",
+            "text": "The Package Manager"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "You think a slow page is caused by a bad/missing search index \u2014 where would that usually show up as a warning first?",
-        explain:
-          "Oak logs a warning for queries that traverse the whole repository (no matching index) or run slowly \u2014 this surfaces in the standard logs before you'd reach for deeper query-performance tooling.",
+        "correct": [
+          "a"
+        ],
+        "plain": "You think a slow page is caused by a bad/missing search index — where would that usually show up as a warning first?",
+        "explain": "Oak logs a warning for queries that traverse the whole repository (no matching index) or run slowly — this surfaces in the standard logs before you'd reach for deeper query-performance tooling.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "AEM 6.5: Troubleshooting Slow Queries",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/developing/bestpractices/troubleshooting-slow-queries"
+            }
+          ]
+        }
       },
       {
-        id: "q46",
-        section: "S5",
-        type: "single",
-        stem: "A specific workflow instance appears stuck and never completes.",
-        q: "Where should a developer look first to diagnose that specific instance?",
-        options: [
+        "id": "q46",
+        "section": "S5",
+        "type": "single",
+        "stem": "A specific workflow instance appears stuck and never completes.",
+        "q": "Where should a developer look first to diagnose that specific instance?",
+        "options": [
           {
-            id: "a",
-            text: "The Workflow Console, inspecting that instance's history and current step",
+            "id": "a",
+            "text": "The workflow consoles: Instances to find it, Failures for its failure details and history"
           },
-          { id: "b", text: "The Package Manager" },
-          { id: "c", text: "The dispatcher log" },
-          { id: "d", text: "CRXDE Lite's node type registry" },
+          {
+            "id": "b",
+            "text": "The Package Manager"
+          },
+          {
+            "id": "c",
+            "text": "The Dispatcher log"
+          },
+          {
+            "id": "d",
+            "text": "CRXDE Lite's node type registry"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "One specific workflow (like an approval process) is stuck \u2014 where do you go to look at that one run and see where it's stuck?",
-        explain:
-          "The Workflow Console shows individual workflow instances, their current step, and history \u2014 the direct place to isolate one stuck instance, versus general logs which may not point to a specific one.",
+        "correct": [
+          "a"
+        ],
+        "plain": "One specific workflow (like an approval process) is stuck — where do you go to look at that one run and see where it's stuck?",
+        "explain": "Adobe: Tools > Workflow > Instances lists running instances; Failures shows the failure message, step and stack, with Open History, Retry Step and Terminate.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Answer extended with the Failures console Adobe documents.",
+          "src": [
+            {
+              "t": "AEMaaCS: Administering Workflow Instances",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/administering/workflows-administering"
+            }
+          ]
+        }
       },
       {
-        id: "q47",
-        section: "S5",
-        type: "single",
-        stem: 'A component throws a 500 error, and error.log shows a long stack trace with multiple "Caused by:" sections.',
-        q: "Which part of the trace usually points to the actual root cause?",
-        options: [
+        "id": "q47",
+        "section": "S5",
+        "type": "single",
+        "stem": "A component throws a 500 error, and error.log shows a long stack trace with multiple \"Caused by:\" sections.",
+        "q": "Which part of the trace usually points to the actual root cause?",
+        "options": [
           {
-            id: "a",
-            text: 'The innermost/last "Caused by:" section, closest to where the original exception originated',
+            "id": "a",
+            "text": "The innermost/last \"Caused by:\" section, closest to where the original exception originated"
           },
-          { id: "b", text: "Always the very first line of the entire trace" },
-          { id: "c", text: "Whichever line mentions the servlet class" },
-          { id: "d", text: "The timestamp only" },
+          {
+            "id": "b",
+            "text": "Always the very first line of the entire trace"
+          },
+          {
+            "id": "c",
+            "text": "Whichever line mentions the servlet class"
+          },
+          {
+            "id": "d",
+            "text": "The timestamp only"
+          }
         ],
-        correct: ["a"],
-        plain:
-          'You get a big error with several "Caused by:" sections stacked on top of each other \u2014 which one is actually the real root cause?',
-        explain:
-          'Java exception chains wrap the original cause in outer exceptions as they propagate up; the deepest "Caused by:" is closest to where things actually went wrong, while the top of the trace is often just outer framework code that caught and rethrew it.',
+        "correct": [
+          "a"
+        ],
+        "plain": "You get a big error with several \"Caused by:\" sections stacked on top of each other — which one is actually the real root cause?",
+        "explain": "Java exception chains wrap the original cause in outer exceptions as they propagate up; the deepest \"Caused by:\" is closest to where things actually went wrong, while the top of the trace is often just outer framework code that caught and rethrew it.",
+        "audit": {
+          "ver": "partial",
+          "note": "General Java behavior, not an Adobe topic. No Adobe page covers it.",
+          "src": [
+            {
+              "t": "AEMaaCS: Debugging using logs",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
+            }
+          ]
+        }
       },
       {
-        id: "q48",
-        section: "S3",
-        type: "single",
-        stem: 'A Maven multi-module AEM project includes core, ui.apps, ui.content, ui.config, and an "all" module.',
-        q: 'What is the purpose of the "all" module?',
-        options: [
+        "id": "q48",
+        "section": "S3",
+        "type": "single",
+        "stem": "A Maven multi-module AEM project includes core, ui.apps, ui.content, ui.config, and an \"all\" module.",
+        "q": "What is the purpose of the \"all\" module?",
+        "options": [
           {
-            id: "a",
-            text: "It aggregates the other modules into a single deployable content package",
+            "id": "a",
+            "text": "It aggregates the other modules into a single deployable content package"
           },
-          { id: "b", text: "It replaces the need for ui.apps entirely" },
-          { id: "c", text: "It only contains front-end assets" },
           {
-            id: "d",
-            text: "It is where OSGi configs must be defined instead of ui.config",
+            "id": "b",
+            "text": "It replaces the need for ui.apps entirely"
           },
+          {
+            "id": "c",
+            "text": "It only contains front-end assets"
+          },
+          {
+            "id": "d",
+            "text": "It is where OSGi configs must be defined instead of ui.config"
+          }
         ],
-        correct: ["a"],
-        plain: `There's an "all" module in the project alongside core/ui.apps/ui.content \u2014 what's it actually for?`,
-        explain: `The "all" module packages the other modules together into one deployable artifact \u2014 it doesn't replace any of them, it bundles them for a single deployment step.`,
+        "correct": [
+          "a"
+        ],
+        "plain": "There's an \"all\" module in the project alongside core/ui.apps/ui.content — what's it actually for?",
+        "explain": "The \"all\" module packages the other modules together into one deployable artifact — it doesn't replace any of them, it bundles them for a single deployment step.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "Using the AEM Project Archetype",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/developing/archetype/using"
+            }
+          ]
+        }
       },
       {
-        id: "q49",
-        section: "S3",
-        type: "single",
-        stem: "A team's code passes local review and is committed to the tracked branch in an AEMaaCS Cloud Manager pipeline.",
-        q: "What generally has to happen before that code can reach production?",
-        options: [
+        "id": "q49",
+        "section": "S3",
+        "type": "single",
+        "stem": "A team's code passes local review and is committed to the tracked branch in an AEMaaCS Cloud Manager pipeline.",
+        "q": "What generally has to happen before that code can reach production?",
+        "options": [
           {
-            id: "a",
-            text: "It must pass automated build and Code Quality gates, then typically deploy to a staging environment before promotion to production",
+            "id": "a",
+            "text": "It must pass automated build and Code Quality gates, then typically deploy to a staging environment before promotion to production"
           },
           {
-            id: "b",
-            text: "It deploys directly to production on every commit with no intermediate stage",
+            "id": "b",
+            "text": "It deploys directly to production on every commit with no intermediate stage"
           },
           {
-            id: "c",
-            text: "Only a manual code review is required, no automated pipeline",
+            "id": "c",
+            "text": "Only a manual code review is required, no automated pipeline"
           },
           {
-            id: "d",
-            text: "It bypasses Cloud Manager entirely for production deployments",
-          },
+            "id": "d",
+            "text": "It bypasses Cloud Manager entirely for production deployments"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "Your code just got committed and passed review \u2014 does it go straight to the live production site, or does something else have to happen first?",
-        explain:
-          "Cloud Manager pipelines run automated build and quality-gate checks and typically move code through non-production environments before a (often manually approved) promotion to production \u2014 commits don't go straight to production untested.",
+        "correct": [
+          "a"
+        ],
+        "plain": "Your code just got committed and passed review — does it go straight to the live production site, or does something else have to happen first?",
+        "explain": "Cloud Manager pipelines run automated build and quality-gate checks and typically move code through non-production environments before a (often manually approved) promotion to production — commits don't go straight to production untested.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "AEMaaCS: Deploying Your Code",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/deploy-code"
+            }
+          ]
+        }
       },
       {
-        id: "q50",
-        section: "S1",
-        type: "single",
-        stem: "A content author wants a specific page to also be reachable at a short, memorable URL, without engaging the development team.",
-        q: "Which mechanism fits, and why?",
-        options: [
+        "id": "q50",
+        "section": "S1",
+        "type": "single",
+        "stem": "A content author wants a specific page to also be reachable at a short, memorable URL, without engaging the development team.",
+        "q": "Which mechanism fits, and why?",
+        "options": [
           {
-            id: "a",
-            text: "sling:vanityPath property set directly on the page node \u2014 author-manageable per page",
+            "id": "a",
+            "text": "sling:vanityPath property set directly on the page node — author-manageable per page"
           },
           {
-            id: "b",
-            text: "An entry under /etc/map \u2014 requires developer/config-managed setup",
+            "id": "b",
+            "text": "An entry under /etc/map — requires developer/config-managed setup"
           },
-          { id: "c", text: "A dispatcher filter rule" },
-          { id: "d", text: "A Sling Servlet registered by path" },
+          {
+            "id": "c",
+            "text": "A dispatcher filter rule"
+          },
+          {
+            "id": "d",
+            "text": "A Sling Servlet registered by path"
+          }
         ],
-        correct: ["a"],
-        plain:
-          "A content editor wants a page reachable at a short custom URL, without asking a developer \u2014 what's the author-friendly way to do that?",
-        explain:
-          "sling:vanityPath is set directly on the content node and is meant to be author-manageable per page. /etc/map mappings are a separate, developer-managed configuration tree typically used for broader URL structure or domain-level rewriting, not one-off per-page vanity URLs.",
-      },
+        "correct": [
+          "a"
+        ],
+        "plain": "A content editor wants a page reachable at a short custom URL, without asking a developer — what's the author-friendly way to do that?",
+        "explain": "sling:vanityPath is set directly on the content node and is meant to be author-manageable per page. /etc/map mappings are a separate, developer-managed configuration tree typically used for broader URL structure or domain-level rewriting, not one-off per-page vanity URLs.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "Dispatcher Vanity URLs",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/ams/dispatcher/disp-vanity-url"
+            },
+            {
+              "t": "Apache Sling: Mappings for Resource Resolution",
+              "u": "https://sling.apache.org/documentation/the-sling-engine/mappings-for-resource-resolution.html"
+            }
+          ]
+        }
+      }
     ],
     Yp = [
       {
@@ -10758,7 +11731,7 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
       },
       {
         term: "sling:resourceSuperType",
-        def: `A fallback pointer: "if my own type has no matching script, use this other type's scripts instead."`,
+        def: "The parent type a component inherits from; its scripts and dialog are added to the lookup and merge chain.",
       },
       {
         term: "/apps",
@@ -10842,7 +11815,7 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
       },
       {
         term: "repoinit",
-        def: "A startup script that sets up accounts and permissions before any content gets installed.",
+        def: "A Sling script (shipped as an OSGi config) that creates service users, paths and ACLs when the repository starts up.",
       },
       {
         term: "Cloud Manager",
@@ -10858,7 +11831,7 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
       },
       {
         term: "JCR-SQL2",
-        def: "A full SQL-like query language for the repository \u2014 for more complex searches than Query Builder handles well.",
+        def: "A SQL-like query language for the repository; AEM also supports Query Builder and XPath.",
       },
       {
         term: "Oak",
@@ -10866,7 +11839,7 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
       },
       {
         term: "reindex",
-        def: "Telling Oak to rebuild a search index against content that already existed before the index was added.",
+        def: "Rebuilding an existing index over all content. On 6.5, set reindex=true on the definition; AEMaaCS reindexes during deployment.",
       },
       {
         term: "Discovery Service",
@@ -10964,7 +11937,7 @@ public class StampReviewedProcess implements WorkflowProcess {
           "In CRXDE Lite, open /conf/global/settings/workflow/models and then /var/workflow/models and compare the same model in both. In your project's core module, find a class that implements WorkflowProcess and read its process.label and execute() method.",
         takeaways: [
           "Design time = /conf/.../settings/workflow/models; runtime = /var/workflow/models",
-          "/etc/workflow/models is pre-6.4 legacy, a distractor on modern questions",
+          "/etc is the legacy workflow location; a distractor on modern questions",
           "Custom step = @Component(service = WorkflowProcess.class) that IMPLEMENTS the interface; process.label is the dropdown name",
           "One method to write: execute(WorkItem, WorkflowSession, MetaDataMap)",
           "The workflow engine is Granite, not Sling; a Model is the diagram, a Process is the Java class",
@@ -10992,7 +11965,7 @@ public class ListHelper {
         handsOn:
           "In your project, find an HTL file that passes a parameter in data-sly-use and follow it into the model's @RequestAttribute field. In a scratch component on the local SDK, render a few format patterns (#%, 0.00, #,##0) against positive and negative numbers and confirm what you predicted.",
         takeaways: [
-          "HTL number format = DecimalFormat; % means ×100 plus a percent sign; don't add your own minus",
+          "HTL number pattern: % means ×100 plus a percent sign; the minus for negatives is automatic",
           "data-sly-use parameters arrive as request attributes → @RequestAttribute, request adaptable",
           "Class level = attribute on @Model (defaultInjectionStrategy); field level = attribute on the injector (injectionStrategy)",
           "Without OPTIONAL, one missing required field makes adaptTo() return null for the whole model",
@@ -11048,10 +12021,10 @@ Content-Length: 0
         takeaways: [
           "First step = check a log, console or queue; never restart, rebuild, reindex or clear the browser cache first",
           "error = exceptions; access = who requested; request = timing; audit = who changed or published, and when",
-          "/filter = what gets in; /cache /rules = what gets cached; flush agent / invalidate = when it gets cleared",
+          "/filter = what gets in (blocked = 404); /cache /rules = what gets cached; flush request + /invalidate + .stat files = when it's stale",
           "Stale content right after publishing usually means the flush agent",
-          "Misconfigured property on AEMaaCS → Developer Console: Configurations + OSGi Services",
-          "Clientlibs: allowProxy for /etc.clientlibs, HTML Library Manager for minify, dumplibs to inspect",
+          "Misconfigured property on AEMaaCS → Developer Console: Configurations + Components",
+          "Clientlibs: allowProxy for /etc.clientlibs, jsProcessor/cssProcessor for minify (HTML Library Manager defaults aren't supported on AEMaaCS), dumplibs to inspect",
         ],
       },
       105: {
@@ -11072,10 +12045,10 @@ Content-Length: 0
           "On the local SDK, browse /oak:index in CRXDE and open one Lucene definition. Run a query through Explain Query. Open /system/console/topology to see the topology view. On author, open the replication agent page and read its log.",
         takeaways: [
           "Indexes = /oak:index at the root; in code = _oak_index (same place, encoded)",
-          "AEMaaCS custom index naming: <name>-custom-<n>; each change bumps n",
+          "AEMaaCS index naming: customized OOTB = <name>-custom-<n>; fully custom = prefix.<name>-<n>-custom-<m>",
           "Replication runs as the replication user; namespace replication needs jcr:namespaceManagement",
-          "AEMaaCS = Sling Content Distribution, not replication agents",
-          "Instances join a topology via Sling Discovery; 'Topology Connector Service' style names are traps",
+          "AEMaaCS moves content with Sling Content Distribution",
+          "Instances join a topology via Sling Discovery (through a Topology Connector); invented names like 'Topology Offloading Bridge' are traps",
           "Maintenance with minimal disruption = staged: test on stage, then prod",
         ],
       },
@@ -11170,296 +12143,842 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
       { term: "Developer Console", def: "AEMaaCS's per-environment status page: bundles, components, configurations, services, jobs." },
       { term: "allowProxy", def: "A clientlib folder property that lets /apps clientlibs be served through /etc.clientlibs/." },
       { term: "invalidate.cache", def: "The Dispatcher endpoint you POST to (CQ-Action, CQ-Handle headers) to clear cached files." },
-      { term: "Sling Content Distribution", def: "The AEMaaCS mechanism that replaced replication agents for moving content to Publish." },
+      { term: "Sling Content Distribution", def: "How AEMaaCS moves content from Author to Publish, and Adobe's preferred way to invalidate the Dispatcher cache explicitly." },
       { term: "jcr:namespaceManagement", def: "The repository-level privilege needed to register a new namespace." },
       { term: "_oak_index", def: "How the oak:index folder is spelled inside a code package, since folder names can't contain a colon." },
       { term: "process.label", def: "The OSGi property that names a custom workflow process in the Process Step dropdown." },
-      { term: "HTML Library Manager", def: "The OSGi config that controls how clientlibs are processed, including minification." },
+      { term: "HTML Library Manager", def: "The OSGi config for clientlib processing on 6.5. On AEMaaCS, setting its defaults isn't supported; use jsProcessor/cssProcessor on the clientlib." },
       { term: "flush agent", def: "The replication agent that tells the Dispatcher to drop cached copies after a publish." },
     ];
   var NEW_DRILLS = [
       {
-        id: "q51", section: "S5", type: "single",
-        stem: "A marketing manager asks who published a press-release page last night and at what time. The page renders fine and nothing is erroring.",
-        q: "Which log answers the question most directly?",
-        options: [
-          { id: "a", text: "access.log" },
-          { id: "b", text: "audit.log" },
-          { id: "c", text: "request.log" },
-          { id: "d", text: "error.log" },
+        "id": "q51",
+        "section": "S5",
+        "type": "single",
+        "stem": "A marketing manager asks who published a press-release page last night and at what time. The page renders fine and nothing is erroring.",
+        "q": "Which log answers the question most directly?",
+        "options": [
+          {
+            "id": "a",
+            "text": "access.log"
+          },
+          {
+            "id": "b",
+            "text": "audit.log"
+          },
+          {
+            "id": "c",
+            "text": "request.log"
+          },
+          {
+            "id": "d",
+            "text": "error.log"
+          }
         ],
-        correct: ["b"],
-        plain: "Someone wants to know which person pushed a page live and when. Which log keeps a record of people doing things to content?",
-        explain: "Publishing is an action that changes something, and audit.log records who did what and when for those actions. access.log only shows who requested a URL, request.log shows timing without the user who made a change, and error.log only records failures.",
+        "correct": [
+          "b"
+        ],
+        "plain": "Someone wants to know which person pushed a page live and when. Which log keeps a record of people doing things to content?",
+        "explain": "Publishing is an action that changes something, and audit.log records who did what and when for those actions. access.log only shows who requested a URL, request.log shows timing without the user who made a change, and error.log only records failures.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "KB: Enabling and Managing Audit Logs",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-24740"
+            }
+          ]
+        }
       },
       {
-        id: "q52", section: "S5", type: "single",
-        stem: "Authors report that a news listing on Publish still shows yesterday's headline about ten minutes after a successful activation. Other pages update normally.",
-        q: "What is the most likely component to investigate first?",
-        options: [
-          { id: "a", text: "The /filter section, since it decides what is cached" },
-          { id: "b", text: "The Dispatcher flush agent and invalidation for that path" },
-          { id: "c", text: "The Sling Model behind the listing component" },
-          { id: "d", text: "The browser cache on the authors' machines" },
+        "id": "q52",
+        "section": "S5",
+        "type": "single",
+        "stem": "Authors report that a news listing on Publish still shows yesterday's headline about ten minutes after a successful activation. Other pages update normally.",
+        "q": "What is the most likely component to investigate first?",
+        "options": [
+          {
+            "id": "a",
+            "text": "The /filter section, since it decides what is cached"
+          },
+          {
+            "id": "b",
+            "text": "The Dispatcher flush agent and invalidation for that path"
+          },
+          {
+            "id": "c",
+            "text": "The Sling Model behind the listing component"
+          },
+          {
+            "id": "d",
+            "text": "The browser cache on the authors' machines"
+          }
         ],
-        correct: ["b"],
-        plain: "The content was published but the live site still shows the old version. Which part of the system is responsible for throwing away the old cached copy?",
-        explain: "Stale content right after publishing points to invalidation: the flush agent or /invalidate rules decide when cached files get cleared. /filter only decides which requests are allowed in, not caching. The model renders fresh output when it's actually called. A browser cache wouldn't affect only one page for every visitor.",
+        "correct": [
+          "b"
+        ],
+        "plain": "The content was published but the live site still shows the old version. Which part of the system is responsible for throwing away the old cached copy?",
+        "explain": "Stale content right after publishing points to invalidation: the flush agent or /invalidate rules decide when cached files get cleared. /filter only decides which requests are allowed in, not caching. The model renders fresh output when it's actually called. A browser cache wouldn't affect only one page for every visitor.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "Dispatcher: Configure AEM Dispatcher",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/dispatcher-configuration"
+            },
+            {
+              "t": "Dispatcher: Invalidate Cached Pages",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/page-invalidate"
+            }
+          ]
+        }
       },
       {
-        id: "q53", section: "S5", type: "multi",
-        stem: "On an AEMaaCS dev environment, a custom OSGi service is behaving as though one of its configured values is missing.",
-        q: "Which two Developer Console status views give the most direct evidence? (Choose two.)",
-        options: [
-          { id: "a", text: "Configurations" },
-          { id: "b", text: "OSGi Services" },
-          { id: "c", text: "Sling Jobs" },
-          { id: "d", text: "Bundles" },
-          { id: "e", text: "Java Packages" },
+        "id": "q53",
+        "section": "S5",
+        "type": "multi",
+        "stem": "On an AEMaaCS dev environment, a custom OSGi service is behaving as though one of its configured values is missing.",
+        "q": "Which two Developer Console status views give the most direct evidence? (Choose two.)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Configurations"
+          },
+          {
+            "id": "b",
+            "text": "OSGi Services"
+          },
+          {
+            "id": "c",
+            "text": "Sling Jobs"
+          },
+          {
+            "id": "d",
+            "text": "Bundles"
+          },
+          {
+            "id": "e",
+            "text": "Components"
+          }
         ],
-        correct: ["a", "b"],
-        plain: "A service seems to be missing a setting. Which two status pages show you which settings exist and which settings the running service actually received?",
-        explain: "Configurations shows the config values in effect, and OSGi Services shows the running service and the properties it picked up. Together they tell you whether the config exists and whether it reached the service. Bundles only shows whether code is installed and active, Sling Jobs is for queued jobs, and packages show exports and imports.",
+        "correct": [
+          "a",
+          "e"
+        ],
+        "plain": "A service seems to be missing a setting. Which two status pages show the settings that exist and the values the component actually received?",
+        "explain": "Adobe: Configurations lists property/value pairs per component, and Components shows each component's state and the values actually bound to it, including ones injected from environment variables, which Configurations doesn't show. OSGi Services lists services and the bundles that provide and use them, not config values.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Answer changed: Configurations + Components, not OSGi Services.",
+          "src": [
+            {
+              "t": "Debugging AEMaaCS with the Developer Console",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/developer-console"
+            }
+          ]
+        }
       },
       {
-        id: "q54", section: "S5", type: "single",
-        stem: "A page on the local SDK renders blank where a custom component should be. The browser console is clean and the network tab shows a 200 for the page.",
-        q: "What should you do first?",
-        options: [
-          { id: "a", text: "Clear the browser cache and reload" },
-          { id: "b", text: "Rebuild and redeploy the project with Maven" },
-          { id: "c", text: "Check error.log for an exception during that request" },
-          { id: "d", text: "Delete the component node and re-add it" },
+        "id": "q54",
+        "section": "S5",
+        "type": "single",
+        "stem": "A page on the local SDK renders blank where a custom component should be. The browser console is clean and the network tab shows a 200 for the page.",
+        "q": "What should you do first?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Clear the browser cache and reload"
+          },
+          {
+            "id": "b",
+            "text": "Rebuild and redeploy the project with Maven"
+          },
+          {
+            "id": "c",
+            "text": "Check error.log for an exception during that request"
+          },
+          {
+            "id": "d",
+            "text": "Delete the component node and re-add it"
+          }
         ],
-        correct: ["c"],
-        plain: "Nothing looks wrong in the browser, but the component didn't show up. Where do you look before changing anything?",
-        explain: "When the browser shows no error, the failure happened on the server, so the first step is to gather server evidence in error.log. Rebuilding, deleting nodes and clearing caches are all actions taken before you know the cause.",
+        "correct": [
+          "c"
+        ],
+        "plain": "Nothing looks wrong in the browser, but the component didn't show up. Where do you look before changing anything?",
+        "explain": "When the browser shows no error, the failure happened on the server, so the first step is to gather server evidence in error.log. Rebuilding, deleting nodes and clearing caches are all actions taken before you know the cause.",
+        "audit": {
+          "ver": "partial",
+          "note": "Reasoning item (gather server evidence first). The log source is confirmed; the rule itself isn't stated on one Adobe page.",
+          "src": [
+            {
+              "t": "AEMaaCS: Debugging using logs",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
+            }
+          ]
+        }
       },
       {
-        id: "q55", section: "S5", type: "single",
-        stem: "After a deploy, a new servlet never responds. In /system/console/bundles the project's core bundle shows the state Installed instead of Active.",
-        q: "What does that state most likely indicate?",
-        options: [
-          { id: "a", text: "The bundle is waiting for a scheduled activation window" },
-          { id: "b", text: "The bundle has an unresolved dependency, such as a missing package import" },
-          { id: "c", text: "The Dispatcher is blocking the servlet path" },
-          { id: "d", text: "The servlet's OSGi config has a typo in one property value" },
+        "id": "q55",
+        "section": "S5",
+        "type": "single",
+        "stem": "After a deploy, a new servlet never responds. In /system/console/bundles the project's core bundle shows the state Installed instead of Active.",
+        "q": "What does that state most likely indicate?",
+        "options": [
+          {
+            "id": "a",
+            "text": "The bundle is waiting for a scheduled activation window"
+          },
+          {
+            "id": "b",
+            "text": "The bundle has an unresolved dependency, such as a missing package import"
+          },
+          {
+            "id": "c",
+            "text": "The Dispatcher is blocking the servlet path"
+          },
+          {
+            "id": "d",
+            "text": "The servlet's OSGi config has a typo in one property value"
+          }
         ],
-        correct: ["b"],
-        plain: "The code got uploaded but never switched on. What usually stops an OSGi bundle from going from 'installed' to 'running'?",
-        explain: "An Installed bundle couldn't resolve. Usually it imports a package that nothing exports at the right version. The bundle detail page lists the failing imports. Activation windows don't exist, and a Dispatcher block or a wrong config value wouldn't change the bundle state.",
+        "correct": [
+          "b"
+        ],
+        "plain": "The code got uploaded but never switched on. What usually stops an OSGi bundle from going from 'installed' to 'running'?",
+        "explain": "An Installed bundle couldn't resolve. Usually it imports a package that nothing exports at the right version. The bundle detail page lists the failing imports. Activation windows don't exist, and a Dispatcher block or a wrong config value wouldn't change the bundle state.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "Debugging AEM SDK: OSGi web console",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-sdk/osgi-web-consoles"
+            },
+            {
+              "t": "Debugging AEMaaCS with the Developer Console",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/developer-console"
+            }
+          ]
+        }
       },
       {
-        id: "q56", section: "S5", type: "single",
-        stem: "A clientlib defined under /apps/my-site/clientlibs/site loads fine on author in CRXDE preview, but on Publish the page requests /etc.clientlibs/my-site/clientlibs/site.css and gets a 404.",
-        q: "Which property is most likely missing on the clientlib folder?",
-        options: [
-          { id: "a", text: "allowProxy=true" },
-          { id: "b", text: "embed=[...]" },
-          { id: "c", text: "dependencies=[...]" },
-          { id: "d", text: "jsProcessor=[min:gcc]" },
+        "id": "q56",
+        "section": "S5",
+        "type": "single",
+        "stem": "A clientlib defined under /apps/my-site/clientlibs/site loads fine on author in CRXDE preview, but on Publish the page requests /etc.clientlibs/my-site/clientlibs/site.css and gets a 404.",
+        "q": "Which property is most likely missing on the clientlib folder?",
+        "options": [
+          {
+            "id": "a",
+            "text": "allowProxy=true"
+          },
+          {
+            "id": "b",
+            "text": "embed=[...]"
+          },
+          {
+            "id": "c",
+            "text": "dependencies=[...]"
+          },
+          {
+            "id": "d",
+            "text": "jsProcessor=[min:gcc]"
+          }
         ],
-        correct: ["a"],
-        plain: "Your CSS lives in /apps but the page asks for it through a public /etc.clientlibs/ address and can't find it. Which setting lets that public address work?",
-        explain: "/apps isn't readable on Publish for anonymous users, so clientlibs are served through the /etc.clientlibs proxy, and that only works when allowProxy=true is set on the folder. embed and dependencies control how libraries are combined, and jsProcessor controls minification.",
+        "correct": [
+          "a"
+        ],
+        "plain": "Your CSS lives in /apps but the page asks for it through a public /etc.clientlibs/ address and can't find it. Which setting lets that public address work?",
+        "explain": "Adobe: clientlibs live under /apps, and the proxy servlet serves them at /etc.clientlibs only when allowProxy=true is set on the folder. embed and dependencies decide how libraries are combined, and jsProcessor sets minification.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Explanation fixed to Adobe's wording.",
+          "src": [
+            {
+              "t": "AEMaaCS: Client-Side Libraries",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/full-stack/clientlibs"
+            }
+          ]
+        }
       },
       {
-        id: "q57", section: "S5", type: "single",
-        stem: "An ops engineer needs to force-clear the cached copy of /content/my-site/en/offers from the Dispatcher without publishing anything.",
-        q: "Which request does that?",
-        options: [
-          { id: "a", text: "GET /dispatcher/invalidate.cache?path=/content/my-site/en/offers" },
-          { id: "b", text: "POST /dispatcher/invalidate.cache with CQ-Action: Activate and CQ-Handle: /content/my-site/en/offers" },
-          { id: "c", text: "POST /bin/replicate.json with cmd=Deactivate" },
-          { id: "d", text: "DELETE /content/my-site/en/offers.html on the Dispatcher host" },
+        "id": "q57",
+        "section": "S5",
+        "type": "single",
+        "stem": "An ops engineer needs to force-clear the cached copy of /content/my-site/en/offers from the Dispatcher without publishing anything.",
+        "q": "Which request does that?",
+        "options": [
+          {
+            "id": "a",
+            "text": "GET /dispatcher/invalidate.cache?path=/content/my-site/en/offers"
+          },
+          {
+            "id": "b",
+            "text": "POST /dispatcher/invalidate.cache with CQ-Action: Activate and CQ-Handle: /content/my-site/en/offers"
+          },
+          {
+            "id": "c",
+            "text": "POST /bin/replicate.json with cmd=Deactivate"
+          },
+          {
+            "id": "d",
+            "text": "DELETE /content/my-site/en/offers.html on the Dispatcher host"
+          }
         ],
-        correct: ["b"],
-        plain: "You want the cache to drop its saved copy of one page. What is the documented way to tell the Dispatcher to do that?",
-        explain: "The documented flush request is a POST to /dispatcher/invalidate.cache with CQ-Action and CQ-Handle headers. Activate is the usual action and means 'this changed, refetch it'. A GET would be the wrong method for a state change, Deactivate through replication would unpublish the page, and the Dispatcher doesn't accept DELETE requests to remove files.",
+        "correct": [
+          "b"
+        ],
+        "plain": "You want the cache to drop its saved copy of one page. What is the documented way to tell the Dispatcher to do that?",
+        "explain": "Adobe's Dispatcher doc gives this exact form: POST /dispatcher/invalidate.cache with CQ-Action: Activate and a CQ-Handle path. The GET isn't the documented request, deactivating would unpublish the page, and DELETE isn't how Dispatcher is flushed.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Explanation trimmed to what Adobe documents.",
+          "src": [
+            {
+              "t": "Dispatcher: Invalidate Cached Pages",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/page-invalidate"
+            }
+          ]
+        }
       },
       {
-        id: "q58", section: "S5", type: "single",
-        stem: "Users say every page on Publish got slow this afternoon. Error volume hasn't changed.",
-        q: "Which log gives you the per-request durations to confirm and narrow it down?",
-        options: [
-          { id: "a", text: "audit.log" },
-          { id: "b", text: "request.log" },
-          { id: "c", text: "stdout.log" },
-          { id: "d", text: "history.log" },
+        "id": "q58",
+        "section": "S5",
+        "type": "single",
+        "stem": "Users say every page on Publish got slow this afternoon. Error volume hasn't changed.",
+        "q": "Which log gives you the per-request durations to confirm and narrow it down?",
+        "options": [
+          {
+            "id": "a",
+            "text": "audit.log"
+          },
+          {
+            "id": "b",
+            "text": "request.log"
+          },
+          {
+            "id": "c",
+            "text": "stdout.log"
+          },
+          {
+            "id": "d",
+            "text": "history.log"
+          }
         ],
-        correct: ["b"],
-        plain: "Pages feel slow but nothing is crashing. Which log writes down how long each request took?",
-        explain: "request.log records each request's start and completion with the elapsed time, so you can see which URLs got slow and when. audit.log tracks content changes, stdout.log is JVM and startup output, and history.log isn't where request timing is recorded.",
+        "correct": [
+          "b"
+        ],
+        "plain": "Pages feel slow but nothing is crashing. Which log writes down how long each request took?",
+        "explain": "Adobe: request.log has a request line and a response line per request, including the response time in milliseconds. On AEMaaCS the same data is in the aemrequest log. audit.log tracks changes, and stdout.log isn't request timing.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Explanation adds the AEMaaCS log name.",
+          "src": [
+            {
+              "t": "KB: Examples of request.log analysis",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-21309"
+            },
+            {
+              "t": "AEMaaCS: Debugging using logs",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
+            }
+          ]
+        }
       },
       {
-        id: "q59", section: "S2", type: "single",
-        stem: "A model exposes completion = -0.42 (a ratio). The design shows it as -42%.",
-        q: "Which HTL expression produces -42%?",
-        options: [
-          { id: "a", text: "${'-#%' @ format=model.completion}" },
-          { id: "b", text: "${'#%' @ format=model.completion}" },
-          { id: "c", text: "${model.completion @ percentage=100}" },
-          { id: "d", text: "${'#' @ format=model.completion * 100}%" },
+        "id": "q59",
+        "section": "S2",
+        "type": "single",
+        "stem": "A model exposes completion = -0.42 (a ratio). The design shows it as -42%.",
+        "q": "Which HTL expression produces -42%?",
+        "options": [
+          {
+            "id": "a",
+            "text": "${'-#%' @ format=model.completion}"
+          },
+          {
+            "id": "b",
+            "text": "${'#%' @ format=model.completion}"
+          },
+          {
+            "id": "c",
+            "text": "${model.completion @ percentage=100}"
+          },
+          {
+            "id": "d",
+            "text": "${'#' @ format=model.completion * 100}%"
+          }
         ],
-        correct: ["b"],
-        plain: "You have a decimal like -0.42 and want it shown as a percentage. Which HTL formatting pattern does the multiplying and adds the minus sign for you?",
-        explain: "With a number, HTL uses DecimalFormat patterns: % multiplies by 100 and adds the sign, and negative numbers get a minus automatically, so #% gives -42%. Adding your own minus (a) doubles it. percentage isn't an HTL option. HTL expressions don't support arithmetic like * 100.",
+        "correct": [
+          "b"
+        ],
+        "plain": "You have a decimal like -0.42 and want it shown as a percentage. Which HTL formatting pattern does the multiplying and adds the minus sign for you?",
+        "explain": "With a number, HTL uses DecimalFormat patterns: % multiplies by 100 and adds the sign, and negative numbers get a minus automatically, so #% gives -42%. Adding your own minus (a) doubles it. percentage isn't an HTL option. HTL expressions don't support arithmetic like * 100.",
+        "audit": {
+          "ver": "verified",
+          "note": "The spec's own example: '#%' on -3.14 gives -314%.",
+          "src": [
+            {
+              "t": "HTL Specification (Adobe)",
+              "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"
+            }
+          ]
+        }
       },
       {
-        id: "q60", section: "S2", type: "single",
-        stem: "In HTL: <sly data-sly-use.tabs=\"${'com.example.TabsModel' @ maxTabs=4}\"/>. The model adapts from SlingHttpServletRequest.",
-        q: "How should TabsModel read maxTabs?",
-        options: [
-          { id: "a", text: "@ValueMapValue(name = \"maxTabs\")" },
-          { id: "b", text: "@RequestAttribute(name = \"maxTabs\")" },
-          { id: "c", text: "@ScriptVariable(name = \"maxTabs\")" },
-          { id: "d", text: "@OSGiService(filter = \"(maxTabs=4)\")" },
+        "id": "q60",
+        "section": "S2",
+        "type": "single",
+        "stem": "In HTL: <sly data-sly-use.tabs=\"${'com.example.TabsModel' @ maxTabs=4}\"/>. The model adapts from SlingHttpServletRequest.",
+        "q": "How should TabsModel read maxTabs?",
+        "options": [
+          {
+            "id": "a",
+            "text": "@ValueMapValue(name = \"maxTabs\")"
+          },
+          {
+            "id": "b",
+            "text": "@RequestAttribute(name = \"maxTabs\")"
+          },
+          {
+            "id": "c",
+            "text": "@ScriptVariable(name = \"maxTabs\")"
+          },
+          {
+            "id": "d",
+            "text": "@OSGiService(filter = \"(maxTabs=4)\")"
+          }
         ],
-        correct: ["b"],
-        plain: "The HTL file hands the model a value when it loads it. Where does that value end up, so the model can pick it up?",
-        explain: "Parameters passed through data-sly-use reach a Sling Model as request attributes, which @RequestAttribute reads. @ValueMapValue reads properties on the content node, @ScriptVariable reads HTL script bindings such as currentPage, and @OSGiService injects a service.",
+        "correct": [
+          "b"
+        ],
+        "plain": "The HTL file hands the model a value when it loads it. Where does that value end up, so the model can pick it up?",
+        "explain": "Parameters passed through data-sly-use reach a Sling Model as request attributes, which @RequestAttribute reads. @ValueMapValue reads properties on the content node, @ScriptVariable reads HTL script bindings such as currentPage, and @OSGiService injects a service.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "Apache Sling: HTL Scripting Engine",
+              "u": "https://sling.apache.org/documentation/bundles/scripting/scripting-htl.html"
+            },
+            {
+              "t": "Apache Sling Models",
+              "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"
+            }
+          ]
+        }
       },
       {
-        id: "q61", section: "S2", type: "single",
-        stem: "A model has eight injected fields. Several are legitimately empty on many pages, and when any one is missing the whole model comes back null.",
-        q: "What is the cleanest fix that applies to every field at once?",
-        options: [
-          { id: "a", text: "Add @Optional to each field" },
-          { id: "b", text: "Set defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL on @Model" },
-          { id: "c", text: "Set injectionStrategy = InjectionStrategy.OPTIONAL on @Model" },
-          { id: "d", text: "Wrap adaptTo() in a try/catch in the HTL" },
+        "id": "q61",
+        "section": "S2",
+        "type": "single",
+        "stem": "A model has eight injected fields. Several are legitimately empty on many pages, and when any one is missing the whole model comes back null.",
+        "q": "What is the cleanest fix that applies to every field at once?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Add @Optional to each field"
+          },
+          {
+            "id": "b",
+            "text": "Set defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL on @Model"
+          },
+          {
+            "id": "c",
+            "text": "Set injectionStrategy = InjectionStrategy.OPTIONAL on @Model"
+          },
+          {
+            "id": "d",
+            "text": "Wrap adaptTo() in a try/catch in the HTL"
+          }
         ],
-        correct: ["b"],
-        plain: "You want every field in the class to be allowed to be missing, without editing each field. Which class-wide setting does that?",
-        explain: "defaultInjectionStrategy on @Model is the class-level switch. @Optional and injectionStrategy are field-level, so (a) works but isn't 'all at once', and (c) puts a field-level attribute name on the wrong annotation. HTL has no try/catch.",
+        "correct": [
+          "b"
+        ],
+        "plain": "You want every field in the class to be allowed to be missing, without editing each field. Which class-wide setting does that?",
+        "explain": "defaultInjectionStrategy on @Model is the class-level switch. @Optional and injectionStrategy are field-level, so (a) works but isn't 'all at once', and (c) puts a field-level attribute name on the wrong annotation. HTL has no try/catch.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "Apache Sling Models",
+              "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"
+            },
+            {
+              "t": "Sling Models @ValueMapValue javadoc",
+              "u": "https://sling.apache.org/apidocs/sling14/org/apache/sling/models/annotations/injectorspecific/ValueMapValue.html"
+            }
+          ]
+        }
       },
       {
-        id: "q62", section: "S2", type: "single",
-        stem: "You need a custom workflow step that sets a reviewed-date property on the payload page.",
-        q: "Which declaration is correct for AEMaaCS?",
-        options: [
-          { id: "a", text: "public class StampStep extends WorkflowProcess" },
-          { id: "b", text: "@Component(service = WorkflowProcess.class, property = \"process.label=Stamp date\") public class StampStep implements WorkflowProcess" },
-          { id: "c", text: "@Component(service = Servlet.class) public class StampStep implements WorkflowProcess" },
-          { id: "d", text: "@Model(adaptables = WorkItem.class) public class StampStep" },
+        "id": "q62",
+        "section": "S2",
+        "type": "single",
+        "stem": "You need a custom workflow step that sets a reviewed-date property on the payload page.",
+        "q": "Which declaration is correct for AEMaaCS?",
+        "options": [
+          {
+            "id": "a",
+            "text": "public class StampStep extends WorkflowProcess"
+          },
+          {
+            "id": "b",
+            "text": "@Component(service = WorkflowProcess.class, property = \"process.label=Stamp date\") public class StampStep implements WorkflowProcess"
+          },
+          {
+            "id": "c",
+            "text": "@Component(service = Servlet.class) public class StampStep implements WorkflowProcess"
+          },
+          {
+            "id": "d",
+            "text": "@Model(adaptables = WorkItem.class) public class StampStep"
+          }
         ],
-        correct: ["b"],
-        plain: "To make a custom step, what kind of Java class do you write and how do you register it so it shows up in the workflow editor?",
-        explain: "WorkflowProcess is an interface, so you implement it, and the class is registered as an OSGi service of that type with process.label naming it in the Process Step dropdown. You can't extend an interface (a). Registering as a Servlet (c) hides it from the workflow engine. Sling Models (d) aren't workflow steps.",
+        "correct": [
+          "b"
+        ],
+        "plain": "To make a custom step, what kind of Java class do you write and how do you register it so it shows up in the workflow editor?",
+        "explain": "WorkflowProcess is an interface, so you implement it, and the class is registered as an OSGi service of that type with process.label naming it in the Process Step dropdown. You can't extend an interface (a). Registering as a Servlet (c) hides it from the workflow engine. Sling Models (d) aren't workflow steps.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "Custom Process Step (tutorial)",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/forms/adaptive-forms/custom-process-step-aem-workflow"
+            }
+          ]
+        }
       },
       {
-        id: "q63", section: "S2", type: "single",
-        stem: "A developer edits a workflow model in the model editor but forgets to click Sync. A launcher then starts that workflow.",
-        q: "Which version runs?",
-        options: [
-          { id: "a", text: "The edited version, read live from /conf" },
-          { id: "b", text: "The previous runtime copy under /var/workflow/models" },
-          { id: "c", text: "Neither; unsynced models are disabled" },
-          { id: "d", text: "The copy under /etc/workflow/models" },
+        "id": "q63",
+        "section": "S2",
+        "type": "single",
+        "stem": "A developer edits a workflow model in the model editor but forgets to click Sync. A launcher then starts that workflow.",
+        "q": "Which version runs?",
+        "options": [
+          {
+            "id": "a",
+            "text": "The edited version, read live from /conf"
+          },
+          {
+            "id": "b",
+            "text": "The previous runtime copy under /var/workflow/models"
+          },
+          {
+            "id": "c",
+            "text": "Neither; unsynced models are disabled"
+          },
+          {
+            "id": "d",
+            "text": "The copy under /etc/workflow/models"
+          }
         ],
-        correct: ["b"],
-        plain: "You changed the plan but didn't publish the change to the engine. Does the engine use your draft or the last version it was given?",
-        explain: "The engine executes the runtime copy in /var. Edits in /conf take effect only when sync writes a new runtime copy. Unsynced models aren't disabled, and /etc/workflow/models is the pre-6.4 location.",
+        "correct": [
+          "b"
+        ],
+        "plain": "You changed the plan but didn't publish the change to the engine. Does the engine use your draft or the last version it was given?",
+        "explain": "The engine executes the runtime copy in /var. Edits in /conf take effect only when sync writes a new runtime copy. Unsynced models aren't disabled, and /etc/workflow/models is the pre-6.4 location.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "AEM: Creating Workflow Models",
+              "u": "https://experienceleague.adobe.com/docs/experience-manager-65/developing/extending-aem/extending-workflows/workflows-models.html?lang=en"
+            }
+          ]
+        }
       },
       {
-        id: "q64", section: "S2", type: "single",
-        stem: "A team wants authors to be able to choose between “Dark” and “Light” variants of the Teaser component only, without affecting any other component.",
-        q: "Where should the CSS classes be configured?",
-        options: [
-          { id: "a", text: "Default CSS Classes on the Teaser's policy" },
-          { id: "b", text: "Allowed Styles on the Teaser's policy" },
-          { id: "c", text: "Allowed Styles on the Layout Container's policy" },
-          { id: "d", text: "A clientlib category added to the Page Policy" },
+        "id": "q64",
+        "section": "S2",
+        "type": "single",
+        "stem": "A team wants authors to be able to choose between “Dark” and “Light” variants of the Teaser component only, without affecting any other component.",
+        "q": "Where should the CSS classes be configured?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Default CSS Classes on the Teaser's policy"
+          },
+          {
+            "id": "b",
+            "text": "Allowed Styles on the Teaser's policy"
+          },
+          {
+            "id": "c",
+            "text": "Allowed Styles on the Layout Container's policy"
+          },
+          {
+            "id": "d",
+            "text": "A clientlib category added to the Page Policy"
+          }
         ],
-        correct: ["b"],
-        plain: "Authors need a choice, and it should only apply to one component. Where do you put the list of style choices?",
-        explain: "Choices for authors = Allowed Styles (the Style System), and putting them on the Teaser's own policy scopes them to the Teaser. Default CSS Classes are always applied with no choice. The Layout Container policy styles the container. A Page Policy clientlib only loads CSS and JS.",
+        "correct": [
+          "b"
+        ],
+        "plain": "Authors need a choice, and it should only apply to one component. Where do you put the list of style choices?",
+        "explain": "Choices for authors = Allowed Styles (the Style System), and putting them on the Teaser's own policy scopes them to the Teaser. Default CSS Classes are always applied with no choice. The Layout Container policy styles the container. A Page Policy clientlib only loads CSS and JS.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "AEMaaCS: Style System",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/authoring/page-editor/style-system"
+            },
+            {
+              "t": "Using Core Components",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/get-started/using"
+            }
+          ]
+        }
       },
       {
-        id: "q65", section: "S1", type: "single",
-        stem: "A new FAQ component is deployed with componentGroup=\"My Site - Content\", but authors don't see it in the component browser on pages built from the Article template.",
-        q: "What needs to change?",
-        options: [
-          { id: "a", text: "Add the FAQ component to the template's Initial Content" },
-          { id: "b", text: "Enable the “My Site - Content” group (or the FAQ component) in the Layout Container's policy on the Article template" },
-          { id: "c", text: "Add a clientlib for the FAQ component to the Page Policy" },
-          { id: "d", text: "Set the component's jcr:title to match the template name" },
+        "id": "q65",
+        "section": "S1",
+        "type": "single",
+        "stem": "A new FAQ component is deployed with componentGroup=\"My Site - Content\", but authors don't see it in the component browser on pages built from the Article template.",
+        "q": "What needs to change?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Add the FAQ component to the template's Initial Content"
+          },
+          {
+            "id": "b",
+            "text": "Enable the “My Site - Content” group (or the FAQ component) in the Layout Container's policy on the Article template"
+          },
+          {
+            "id": "c",
+            "text": "Add a clientlib for the FAQ component to the Page Policy"
+          },
+          {
+            "id": "d",
+            "text": "Set the component's jcr:title to match the template name"
+          }
         ],
-        correct: ["b"],
-        plain: "The component exists, but authors can't add it. Which setting decides which components are allowed in that part of the page?",
-        explain: "The container that accepts drops (the Layout Container) holds the allowed-components list in its policy. Initial Content only pre-places components on new pages. A clientlib loads assets, and the title has no effect on whether a component is allowed.",
+        "correct": [
+          "b"
+        ],
+        "plain": "The component exists, but authors can't add it. Which setting decides which components are allowed in that part of the page?",
+        "explain": "The container that accepts drops (the Layout Container) holds the allowed-components list in its policy. Initial Content only pre-places components on new pages. A clientlib loads assets, and the title has no effect on whether a component is allowed.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "Using Core Components",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/get-started/using"
+            }
+          ]
+        }
       },
       {
-        id: "q66", section: "S4", type: "single",
-        stem: "An AEMaaCS project needs a new Lucene index for a custom product search.",
-        q: "Where and how should the definition be delivered?",
-        options: [
-          { id: "a", text: "Create it in CRXDE on production under /oak:index" },
-          { id: "b", text: "In ui.apps under jcr_root/_oak_index/ with a -custom-1 style name, deployed through the pipeline" },
-          { id: "c", text: "In ui.content under /etc/oak:indexes" },
-          { id: "d", text: "In repository.xml in the quickstart folder" },
+        "id": "q66",
+        "section": "S4",
+        "type": "single",
+        "stem": "An AEMaaCS project needs a new Lucene index for a custom product search.",
+        "q": "Where and how should the definition be delivered?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Create it in CRXDE on production under /oak:index"
+          },
+          {
+            "id": "b",
+            "text": "In ui.apps under jcr_root/_oak_index/ with a prefixed, versioned name like acme.productSearch-1-custom-1, deployed through the pipeline"
+          },
+          {
+            "id": "c",
+            "text": "In ui.content under /etc/oak:indexes"
+          },
+          {
+            "id": "d",
+            "text": "In repository.xml in the quickstart folder"
+          }
         ],
-        correct: ["b"],
-        plain: "On the cloud version you can't change the repository by hand. How do you ship a new search index?",
-        explain: "AEMaaCS indexes ship as code: the oak:index folder is written _oak_index in the package (folder names can't contain colons), with a versioned -custom-<n> name, deployed by Cloud Manager. Manual CRXDE edits are a 6.5 approach. /etc/oak:indexes isn't a real index location, and repository.xml is from Jackrabbit 2.",
+        "correct": [
+          "b"
+        ],
+        "plain": "On the cloud version you can't change the repository by hand. How do you ship a new search index?",
+        "explain": "Adobe: index changes on AEMaaCS ship through deployments, under ui.apps/.../_oak_index with a filter entry. Customized out-of-the-box indexes append -custom-<n>; fully custom ones also take a prefix such as acme. to avoid clashes. Only lucene indexes are supported, and changing production directly breaks CI/CD.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Answer fixed: fully custom indexes need a prefix too.",
+          "src": [
+            {
+              "t": "AEMaaCS: Content Search and Indexing",
+              "u": "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/operations/indexing.html?lang=en"
+            }
+          ]
+        }
       },
       {
-        id: "q67", section: "S4", type: "multi",
-        stem: "On AEM 6.5, a package that registers a new JCR namespace replicates to Publish and the queue blocks. Other content replicates normally.",
-        q: "Which two causes are most likely? (Choose two.)",
-        options: [
-          { id: "a", text: "The replication user lacks jcr:namespaceManagement at the repository level" },
-          { id: "b", text: "The replication user lacks read/write on the target content path" },
-          { id: "c", text: "The admin user's password expired" },
-          { id: "d", text: "The Dispatcher flush agent is disabled" },
-          { id: "e", text: "The Oak index for the content is out of date" },
+        "id": "q67",
+        "section": "S4",
+        "type": "multi",
+        "stem": "On AEM 6.5, a package that registers a new JCR namespace replicates to Publish and the queue blocks. Other content replicates normally.",
+        "q": "Which two causes are most likely? (Choose two.)",
+        "options": [
+          {
+            "id": "a",
+            "text": "The replication user lacks jcr:namespaceManagement at the repository level"
+          },
+          {
+            "id": "b",
+            "text": "The replication user lacks read/write on the target content path"
+          },
+          {
+            "id": "c",
+            "text": "The admin user's password expired"
+          },
+          {
+            "id": "d",
+            "text": "The Dispatcher flush agent is disabled"
+          },
+          {
+            "id": "e",
+            "text": "The Oak index for the content is out of date"
+          }
         ],
-        correct: ["a", "b"],
-        plain: "Replication logs in as a specific service account, not admin. What would that account need to be able to do for this package to land?",
-        explain: "Replication writes to Publish as the replication (transport) user, so failures come down to that user's privileges: write access where the content lands, plus jcr:namespaceManagement for registering the namespace. The admin's password doesn't matter, a disabled flush agent wouldn't block the replication queue, and indexes don't affect replication.",
+        "correct": [
+          "a",
+          "b"
+        ],
+        "plain": "Replication logs in as a specific service account, not admin. What would that account need to be able to do for this package to land?",
+        "explain": "Replication writes to Publish as the replication (transport) user, so failures come down to that user's privileges: write access where the content lands, plus jcr:namespaceManagement for registering the namespace. The admin's password doesn't matter, a disabled flush agent wouldn't block the replication queue, and indexes don't affect replication.",
+        "audit": {
+          "ver": "verified",
+          "src": [
+            {
+              "t": "AEM 6.5: Troubleshooting Replication",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/configuring/troubleshoot-rep"
+            }
+          ]
+        }
       },
       {
-        id: "q68", section: "S4", type: "single",
-        stem: "An on-prem 6.5 team needs to apply the latest service pack with the least disruption to authors and site visitors.",
-        q: "Which approach fits best?",
-        options: [
-          { id: "a", text: "Apply it to production first, since that's where issues matter" },
-          { id: "b", text: "Apply it on a staging environment that mirrors prod, validate, then roll it to production in a planned window" },
-          { id: "c", text: "Skip service packs until a user reports a bug" },
-          { id: "d", text: "Apply it to Publish only, leaving Author on the old version" },
+        "id": "q68",
+        "section": "S4",
+        "type": "single",
+        "stem": "An on-prem 6.5 team needs to apply the latest service pack with the least disruption to authors and site visitors.",
+        "q": "Which approach fits best?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Apply it to production first, since that's where issues matter"
+          },
+          {
+            "id": "b",
+            "text": "Apply it on a staging environment that mirrors prod, validate, then roll it to production in a planned window"
+          },
+          {
+            "id": "c",
+            "text": "Skip service packs until a user reports a bug"
+          },
+          {
+            "id": "d",
+            "text": "Apply it to Publish only, leaving Author on the old version"
+          }
         ],
-        correct: ["b"],
-        plain: "You need to upgrade without breaking anything for users. Is the safe move to try it somewhere else first, or go straight to the live site?",
-        explain: "Minimal disruption means staged and validated: test on a prod-like stage, then apply to production in a planned window. Going straight to prod or waiting for bug reports is reactive and risky, and running different versions on Author and Publish causes problems of its own. On AEMaaCS, Adobe applies updates through the pipeline instead.",
+        "correct": [
+          "b"
+        ],
+        "plain": "You need to upgrade without breaking anything for users. Is the safe move to try it somewhere else first, or go straight to the live site?",
+        "explain": "Minimal disruption means staged and validated: test on a prod-like stage, then apply to production in a planned window. Going straight to prod or waiting for bug reports is reactive and risky, and running different versions on Author and Publish causes problems of its own. On AEMaaCS, Adobe applies updates through the pipeline instead.",
+        "audit": {
+          "ver": "partial",
+          "note": "No AEM 6.5 service-pack page was found. Adobe's AEMaaCS update flow (dev, then stage, then prod) follows the same staged pattern.",
+          "src": [
+            {
+              "t": "AEMaaCS: AEM Version Updates",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/deploying/aem-version-updates"
+            }
+          ]
+        }
       },
       {
-        id: "q69", section: "S4", type: "single",
-        stem: "A job that should offload from one 6.5 author instance to another never moves. The topology view shows each instance alone.",
-        q: "Which service is responsible for instances discovering each other?",
-        options: [
-          { id: "a", text: "Sling Discovery" },
-          { id: "b", text: "Topology Offloading Bridge" },
-          { id: "c", text: "Replication Agent Manager" },
-          { id: "d", text: "Cluster Heartbeat Servlet" },
+        "id": "q69",
+        "section": "S4",
+        "type": "single",
+        "stem": "A job that should offload from one 6.5 author instance to another never moves. The topology view shows each instance alone.",
+        "q": "Which service is responsible for instances discovering each other?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Sling Discovery"
+          },
+          {
+            "id": "b",
+            "text": "Topology Offloading Bridge"
+          },
+          {
+            "id": "c",
+            "text": "Replication Agent Manager"
+          },
+          {
+            "id": "d",
+            "text": "Cluster Heartbeat Servlet"
+          }
         ],
-        correct: ["a"],
-        plain: "Two servers can't see each other, so they can't share work. Which built-in service lets AEM instances find each other?",
-        explain: "Sling Discovery builds the topology, and offloading depends on it. The other three are invented names that reuse words from the question, which is a common distractor pattern.",
+        "correct": [
+          "a"
+        ],
+        "plain": "Two servers can't see each other, so they can't share work. Which built-in service lets AEM instances find each other?",
+        "explain": "Adobe: offloading is built on Apache Sling Discovery, whose Discovery Service runs on each instance and joins the topology through a Topology Connector. The three other names are invented.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Explanation fixed: Topology Connector is real.",
+          "src": [
+            {
+              "t": "AEM 6.5: Offloading Jobs",
+              "u": "https://experienceleague.adobe.com/docs/experience-manager-65/deploying/configuring/offloading.html?lang=en"
+            }
+          ]
+        }
       },
       {
-        id: "q70", section: "S3", type: "single",
-        stem: "A developer adds a new OSGi config for a factory service that should exist twice on Publish only, with different settings each time.",
-        q: "Which file layout is correct?",
-        options: [
-          { id: "a", text: "/apps/my-site/osgiconfig/config.publish/com.example.Feed~news.cfg.json and ...~events.cfg.json" },
-          { id: "b", text: "/apps/my-site/osgiconfig/config/com.example.Feed-news.cfg.json and ...-events.cfg.json" },
-          { id: "c", text: "/conf/my-site/osgiconfig/config.publish/com.example.Feed.cfg.json" },
-          { id: "d", text: "/libs/my-site/config.publish/com.example.Feed~news.cfg.json" },
+        "id": "q70",
+        "section": "S3",
+        "type": "single",
+        "stem": "A developer adds a new OSGi config for a factory service that should exist twice on Publish only, with different settings each time.",
+        "q": "Which file layout is correct?",
+        "options": [
+          {
+            "id": "a",
+            "text": "/apps/my-site/osgiconfig/config.publish/com.example.Feed~news.cfg.json and ...~events.cfg.json"
+          },
+          {
+            "id": "b",
+            "text": "/apps/my-site/osgiconfig/config/com.example.Feed~news.cfg.json and ...~events.cfg.json"
+          },
+          {
+            "id": "c",
+            "text": "/conf/my-site/osgiconfig/config.publish/com.example.Feed.cfg.json"
+          },
+          {
+            "id": "d",
+            "text": "/libs/my-site/config.publish/com.example.Feed~news.cfg.json"
+          }
         ],
-        correct: ["a"],
-        plain: "You want two copies of one service's settings, used only on Publish. What folder name targets Publish, and how do you name each copy?",
-        explain: "OSGi configs live under /apps/<project>/osgiconfig/config.<runmode>, and factory configs get a ~name suffix per instance. (b) uses no runmode and the older dash style, (c) puts code config in /conf, and /libs is Adobe's.",
-      },
+        "correct": [
+          "a"
+        ],
+        "plain": "You want two copies of one service's settings, used only on Publish. What folder name targets Publish, and how do you name each copy?",
+        "explain": "Configs go under /apps/<project>/osgiconfig/config.<runmode>, so Publish-only means config.publish, with one file per factory instance. Adobe's OSGi page writes the name as <factoryPID>-<name>.cfg.json and its logging page uses ~name, so the separator isn't the point. (b) has no publish runmode, (c) is /conf, and /libs is Adobe's.",
+        "audit": {
+          "ver": "corrected",
+          "note": "Fixed: Adobe's own docs use both - and ~ for factory names, so the old 'dash is the old style' claim is gone.",
+          "src": [
+            {
+              "t": "AEMaaCS: Configuring OSGi",
+              "u": "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/implementing/deploying/configuring-osgi.html"
+            },
+            {
+              "t": "AEMaaCS: Debugging using logs",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
+            }
+          ]
+        }
+      }
     ];
   (Object.assign(Ms, SMs), As.push(...NEW_DRILLS), Yp.push(...NEW_GLOSSARY), Lf.push(...NEW_WEAK));
   /* ===== Oct 14 2026 update: helper + new UI blocks ===== */
@@ -12081,6 +13600,40 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
           btn(e.n === 106 ? `drill unseen items (${ids.length})` : `drill this week (${ids.length} items)`, () => dw(ids), f.amber, !0))),
     );
   }
+  /* ===== Oct 18 2026: Adobe-docs audit ===== */
+  var AUDIT_DATE = "2026-10-18",
+    WEEK_SOURCES = {"101": [{"t": "AEM: Creating Workflow Models", "u": "https://experienceleague.adobe.com/docs/experience-manager-65/developing/extending-aem/extending-workflows/workflows-models.html?lang=en"}, {"t": "Custom Process Step (tutorial)", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/forms/adaptive-forms/custom-process-step-aem-workflow"}, {"t": "AEM: Starting Workflows (launchers)", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-64/administering/operations/workflows-starting"}, {"t": "AEMaaCS: Administering Workflow Instances", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/administering/workflows-administering"}], "102": [{"t": "HTL Specification (Adobe)", "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"}, {"t": "Apache Sling: HTL Scripting Engine", "u": "https://sling.apache.org/documentation/bundles/scripting/scripting-htl.html"}, {"t": "Apache Sling Models", "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"}, {"t": "Sling Models @ValueMapValue javadoc", "u": "https://sling.apache.org/apidocs/sling14/org/apache/sling/models/annotations/injectorspecific/ValueMapValue.html"}], "103": [{"t": "AEM: Editable Page Templates", "u": "https://experienceleague.adobe.com/docs/experience-manager-65/developing/platform/templates/page-templates-editable.html?lang=en"}, {"t": "Using Core Components", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/get-started/using"}, {"t": "AEMaaCS: Style System", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/authoring/page-editor/style-system"}], "104": [{"t": "AEMaaCS: Debugging using logs", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"}, {"t": "KB: Examples of request.log analysis", "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-21309"}, {"t": "KB: Enabling and Managing Audit Logs", "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-24740"}, {"t": "Dispatcher: Configure AEM Dispatcher", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/dispatcher-configuration"}, {"t": "Dispatcher: Invalidate Cached Pages", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/page-invalidate"}, {"t": "KB: Dispatcher filter rules blocking requests", "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-34606"}, {"t": "Debugging AEMaaCS with the Developer Console", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/developer-console"}, {"t": "Debugging AEM SDK: OSGi web console", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-sdk/osgi-web-consoles"}, {"t": "AEMaaCS: Client-Side Libraries", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/full-stack/clientlibs"}], "105": [{"t": "AEM 6.5: Oak Queries and Indexing", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/deploying/queries-and-indexing"}, {"t": "AEMaaCS: Content Search and Indexing", "u": "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/operations/indexing.html?lang=en"}, {"t": "AEM 6.5: Troubleshooting Replication", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/configuring/troubleshoot-rep"}, {"t": "AEMaaCS: Replication", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/operations/replication"}, {"t": "AEM 6.5: Offloading Jobs", "u": "https://experienceleague.adobe.com/docs/experience-manager-65/deploying/configuring/offloading.html?lang=en"}, {"t": "AEM 6.5: Troubleshooting Slow Queries", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/developing/bestpractices/troubleshooting-slow-queries"}], "1": [{"t": "Apache Sling: URL to Script Resolution", "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/the-sling-engine/url-to-script-resolution.html"}, {"t": "AEMaaCS: Sling Resource Merger", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/full-stack/sling-resource-merger"}], "2": [{"t": "Dispatcher: Configure AEM Dispatcher", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/dispatcher-configuration"}, {"t": "Dispatcher: Invalidate Cached Pages", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/page-invalidate"}, {"t": "AEMaaCS: Replication", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/operations/replication"}], "3": [{"t": "AEMaaCS: Configuring OSGi", "u": "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/implementing/deploying/configuring-osgi.html"}, {"t": "Debugging AEM SDK: OSGi web console", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-sdk/osgi-web-consoles"}], "4": [{"t": "Apache Sling Models", "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"}, {"t": "Sling Models @ValueMapValue javadoc", "u": "https://sling.apache.org/apidocs/sling14/org/apache/sling/models/annotations/injectorspecific/ValueMapValue.html"}, {"t": "AEMaaCS: Enabling JSON Export", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/full-stack/components-templates/enabling-json-exporter"}], "5": [{"t": "HTL Specification (Adobe)", "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"}], "6": [{"t": "Using Core Components", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/get-started/using"}, {"t": "AEM: Editable Page Templates", "u": "https://experienceleague.adobe.com/docs/experience-manager-65/developing/platform/templates/page-templates-editable.html?lang=en"}, {"t": "AEMaaCS: Style System", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/authoring/page-editor/style-system"}, {"t": "Extend a Core Component (tutorial)", "u": "https://experienceleague.adobe.com/docs/experience-manager-learn/spa-react-tutorial/extend-component.html?lang=en"}], "7": [{"t": "Content Fragments and Experience Fragments", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/sites/content-fragments/understand-content-fragments-and-experience-fragments"}, {"t": "AEMaaCS: Customizing Content Fragments (API)", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/configuring-and-extending/content-fragments-customizing"}, {"t": "AEMaaCS: Multi Site Manager and Live Copy", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/administering/reusing-content/msm/overview"}, {"t": "Custom Process Step (tutorial)", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/forms/adaptive-forms/custom-process-step-aem-workflow"}], "8": [{"t": "Using the AEM Project Archetype", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/developing/archetype/using"}, {"t": "Apache Sling: Repository Initialization", "u": "https://sling.apache.org/documentation/bundles/repository-initialization.html"}, {"t": "AEMaaCS: Service Users (tutorial)", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/developing/advanced/service-users"}, {"t": "Cloud Manager: Code Quality Testing", "u": "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/test-results/code-quality-testing.html"}, {"t": "AEMaaCS: Deploying Your Code", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/deploy-code"}], "9": [{"t": "KB: Examples of request.log analysis", "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-21309"}, {"t": "KB: Enabling and Managing Audit Logs", "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-24740"}, {"t": "Dispatcher: Configure AEM Dispatcher", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/dispatcher-configuration"}, {"t": "KB: Dispatcher filter rules blocking requests", "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-34606"}, {"t": "AEM 6.5: Troubleshooting Replication", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/configuring/troubleshoot-rep"}, {"t": "AEM 6.5: Oak Queries and Indexing", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/deploying/queries-and-indexing"}, {"t": "AEM 6.5: Offloading Jobs", "u": "https://experienceleague.adobe.com/docs/experience-manager-65/deploying/configuring/offloading.html?lang=en"}], "10": [{"t": "WKND tutorial: Unit Testing", "u": "https://experienceleague.adobe.com/docs/experience-manager-learn/getting-started-wknd-tutorial-develop/project-archetype/unit-testing.html?lang=en"}, {"t": "AEMaaCS: Persisted GraphQL queries", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/headless/graphql-api/persisted-queries"}, {"t": "Map SPA components to AEM components", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/getting-started-with-aem-headless/spa-editor/react/map-components"}, {"t": "AEMaaCS: SPA Editor Deprecation", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/hybrid/spa-editor-deprecation"}, {"t": "AEM 6.5: Troubleshooting Slow Queries", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/developing/bestpractices/troubleshooting-slow-queries"}, {"t": "AEMaaCS: Internationalizing UI Strings", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/configuring-and-extending/internationalization/dev"}, {"t": "Apache Sling: i18n support", "u": "https://sling.apache.org/documentation/bundles/internationalization-support-i18n.html"}]},
+    WEEK_NOTES = {"106": "Study guidance only; no technical claims to source.", "6": "Default CSS Classes wasn't on the Style System page checked.", "9": "stdout.log isn't described on the Adobe pages checked."};
+  function SourceList({ src: sr }) {
+    if (!sr || !sr.length) return null;
+    return i.default.createElement(
+      "div",
+      { style: { display: "flex", flexDirection: "column", gap: 3, marginTop: 4 } },
+      sr.map((x, k) =>
+        i.default.createElement(
+          "a",
+          { key: k, href: x.u, target: "_blank", rel: "noopener noreferrer", style: { color: f.cyan, fontSize: 12.5, fontFamily: "'IBM Plex Sans', sans-serif", overflowWrap: "anywhere", textDecoration: "underline", textUnderlineOffset: 2 } },
+          x.t, " \u2197",
+        ),
+      ),
+    );
+  }
+  function AuditNote({ audit: a }) {
+    if (!a) return null;
+    let col = a.ver === "verified" ? f.green : a.ver === "corrected" ? f.amber : f.violet,
+      lab = a.ver === "verified" ? "verified against docs" : a.ver === "corrected" ? "corrected " + AUDIT_DATE : "partly verified";
+    return i.default.createElement(
+      "div",
+      { style: { marginTop: 10, paddingTop: 9, borderTop: `1px dashed ${f.border}` } },
+      i.default.createElement(
+        "div",
+        { style: { fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: col, marginBottom: a.note ? 3 : 0 } },
+        (a.ver === "verified" ? "\u2713 " : a.ver === "corrected" ? "\u270E " : "\u25D0 ") + lab,
+      ),
+      a.note && i.default.createElement("div", { style: { fontSize: 12.5, color: f.dim, lineHeight: 1.45, fontFamily: "'IBM Plex Sans', sans-serif" } }, a.note),
+      i.default.createElement(SourceList, { src: a.src }),
+    );
+  }
   function am({ week: e, taught: t, onMarkTaught: a, sessions: sx, onDrillWeek: dw }) {
     let o = Ms[e.n],
       [ck, setCk] = (0, i.useState)(!1);
@@ -12183,6 +13736,12 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
           }),
           o.handsOn,
         ),
+      ),
+      !ck && (WEEK_SOURCES[e.n] || WEEK_NOTES[e.n]) && i.default.createElement(
+        r,
+        { label: "sources \u2014 checked " + AUDIT_DATE, color: f.cyan },
+        WEEK_NOTES[e.n] && i.default.createElement("div", { style: { fontSize: 12.5, color: f.dim, marginBottom: 2 } }, WEEK_NOTES[e.n]),
+        i.default.createElement(SourceList, { src: WEEK_SOURCES[e.n] }),
       ),
       !ck && i.default.createElement(
         r,
@@ -13360,6 +14919,7 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
                   },
                   Se.explain,
                 ),
+                i.default.createElement(AuditNote, { audit: Se.audit }),
               );
             })(),
             i.default.createElement(
@@ -14478,10 +16038,10 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
       id: "d2",
       section: "S1",
       cloud:
-        "AEMaaCS: no direct filesystem/network access to the dispatcher. Invalidation goes through a Dispatcher Flush replication agent, triggered via the Replication API.",
+        "AEMaaCS: no direct filesystem access to the Dispatcher cache. Explicit invalidation is preferably done with Sling Content Distribution from Author; the Replication API driving the publish flush agent is the alternative.",
       legacy:
         "On-prem: dispatcher ran on your own Apache server with direct filesystem access to the cache docroot — cache files could be deleted by hand.",
-      trap: "An option describing ‘delete the cache files directly’ or ‘restart dispatcher to clear cache’ is the legacy/on-prem answer — on AEMaaCS it's always Replication API → Flush agent.",
+      trap: "An option describing ‘delete the cache files directly’ or ‘restart dispatcher to clear cache’ is the legacy/on-prem answer — on AEMaaCS it's SCD invalidation (preferred) or the Replication API with the flush agent.",
     },
     {
       id: "d3",

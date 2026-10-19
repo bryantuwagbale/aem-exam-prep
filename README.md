@@ -14,6 +14,12 @@ Installable as a PWA, works offline, and runs entirely client-side.
 > to Debugging and Development), the glossary gained 18 terms, and `/weak` picks up 9
 > new tracked areas once, without touching your existing entries.
 
+> **Oct 18, 2026 — Adobe docs audit.** Every drill item, lesson, self-check prompt, glossary entry
+> and distractor card was checked against Experience League (plus the Apache Sling and HTL spec
+> pages Adobe links to). After you answer a drill item, it shows *verified*, *corrected* or *partly
+> verified* with source links; each lesson lists its sources. 29 items were corrected, including
+> four answer-key changes (q5, q13, q31, q53). The item data carries an `audit` field.
+
 > **Oct 15, 2026 update — self-check + drill this week.** Each sprint week in `/plan` now ends
 > with a **self-check**: 4–6 open recall prompts. "Start self-check" hides the lesson, you answer
 > in your head, reveal, and mark *got it cold* or *missed*. All prompts cold in one pass marks the
@@ -130,9 +136,8 @@ Clearing site data / browser storage will erase your progress.
 ## Note on the practice items
 
 All 70 practice questions are original, written for this tool. They are not
-reproductions of real exam or licensed practice-test content, and none of the
-underlying answer keys were assumed — the higher-risk claims were checked against
-Apache Sling, OSGi, and Adobe's own documentation before being included.
+reproductions of real exam or licensed practice-test content, and every answer key was
+checked against Adobe's documentation on Oct 18, 2026; each item links its sources.
 
 ## Rebuilding from source
 

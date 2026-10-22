@@ -15033,7 +15033,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
             i.default.createElement(
               "button",
               { onClick: () => setLessonOpen((z) => !z), style: { padding: "12px 14px", borderRadius: 6, cursor: "pointer", border: `1px solid ${f.border}`, background: f.panelAlt, color: f.text, fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14.5, textAlign: "left" } },
-              (lessonOpen ? "\u25BE " : "\u25B8 ") + "1 \xB7 Read the lesson (once)",
+              lessonOpen ? "1 \xB7 Hide the lesson" : "1 \xB7 Read the lesson (once)",
             ),
             i.default.createElement(
               "button",

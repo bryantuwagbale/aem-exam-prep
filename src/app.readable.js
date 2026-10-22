@@ -12314,9 +12314,9 @@ Content-Length: 0
 [ ] One focused practice run in a single sitting, no guessing
 [ ] ≥80% on new questions, and ≥70% in Analyzing & Debugging
 
-IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
-- Do the sections in reverse order (Debugging first, while fresh)
-- Use a timer`,
+OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
+- One run this week only, as a stamina check
+- Single sitting, timer on, no multitasking`,
         delta65:
           "Before booking, check certification.adobe.com for the live exam's time limit and passing score, then divide the time by the number of questions to get your per-question budget.",
         handsOn:
@@ -12364,8 +12364,9 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
     OFFICIAL_RUNS = [
       { date: "2026-09-16", correct: 37, total: 50, secs: { S1: 100, S2: 79, S3: 100, S4: 86, S5: 20 }, note: "Passing result. S5 confirmed as the weak section." },
       { date: "2026-10-14", correct: 35, total: 50, secs: { S1: 90, S2: 79, S3: 100, S4: 71, S5: 20 }, note: "Meets passing criteria, but this is the 5th–6th attempt on the same exam. All 10 S5 answers were guesses. About 82% (33/40) on the questions actually answered." },
+      { date: "2026-10-22", correct: 37, total: 50, secs: { S1: 100, S2: 68, S3: 100, S4: 86, S5: 40 }, note: "Multitasked, ~7th attempt. 12 of 13 misses were items already written up in the Oct 14 review; each maps to a core rule in /guide. Only new topic: CDN logs for cache hit ratio on AEMaaCS (now drill q71). Retired as a score after this run." },
     ],
-    SEC_TRUST = { S1: "low — seen most", S2: "medium — still <80% after repeats", S3: "low — probably memorized", S4: "medium", S5: "none — all guessed" },
+    SEC_TRUST = { S1: "none — memorized", S2: "medium — dropped to 68% despite repeats, a real gap", S3: "none — memorized", S4: "low — seen many times", S5: "low — multitasked; misses were rule-1 and log-table items" },
     READINESS = [
       { id: "r1", text: "Explain every Oct 14 review topic without notes, naming the rule behind each" },
       { id: "r2", text: "One focused practice run in a single sitting, no guessing" },
@@ -13334,6 +13335,59 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
           "c": "/conf isn't where OSGi configs go, and one file can't define two factory instances.",
           "d": "/libs is Adobe's; your code goes in /apps."
         }
+      },
+      {
+        "id": "q71",
+        "section": "S5",
+        "type": "single",
+        "stem": "An AEMaaCS site's marketing team wants to know what share of all Publish traffic is answered from cache without ever reaching AEM, so they can push that number up.",
+        "q": "Which log should the developer download from Cloud Manager to measure it?",
+        "options": [
+          {
+            "id": "a",
+            "text": "The Publish Dispatcher log (aemdispatcher)"
+          },
+          {
+            "id": "b",
+            "text": "The CDN log for the Publish service"
+          },
+          {
+            "id": "c",
+            "text": "The Publish request log (aemrequest)"
+          },
+          {
+            "id": "d",
+            "text": "The Author access log (aemaccess)"
+          }
+        ],
+        "correct": [
+          "b"
+        ],
+        "plain": "On Cloud Service, the CDN sits in front of everything. Which log sees every visitor request, including the ones the CDN answers by itself?",
+        "explain": "Adobe's cache hit ratio guide uses only the CDN logs, downloaded per Publish environment in Cloud Manager. Each entry records a cache status: HIT (served by the CDN with no request to AEM), MISS (fetched from AEM) or PASS (never cached). Adobe suggests aiming for a ratio of 90% or higher. Logs behind the CDN never see its HITs, so they can't give the whole-site ratio.",
+        "audit": {
+          "ver": "verified",
+          "note": "Self-authored item, Oct 22, 2026. Checked against Adobe's CDN cache hit ratio guide.",
+          "src": [
+            {
+              "t": "CDN cache hit ratio analysis",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/caching/cdn-cache-hit-ratio-analysis"
+            },
+            {
+              "t": "CDN log analysis tooling",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/cloud-manager/devops/cdn-log-analysis"
+            },
+            {
+              "t": "AEMaaCS: Debugging using logs",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
+            }
+          ]
+        },
+        "why": {
+          "a": "The Dispatcher sits behind the CDN, so requests the CDN answers as HITs never reach it. It can't show the share answered at the edge.",
+          "c": "The request log is AEM's per-request timing log, behind both the CDN and the Dispatcher. CDN HITs never appear in it.",
+          "d": "Author isn't where site visitors' traffic goes, and an access log behind the CDN never sees CDN HITs."
+        }
       }
     ];
   (Object.assign(Ms, SMs), As.push(...NEW_DRILLS), Yp.push(...NEW_GLOSSARY), Lf.push(...NEW_WEAK));
@@ -13447,7 +13501,7 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
       h(
         "p",
         { style: { margin: "0 0 14px", fontSize: 12.5, color: f.dim, fontFamily: SANS, lineHeight: 1.5 } },
-        "Logged by hand, not from /drill. This exam has been taken 5–6 times, so it now mostly measures memory. If you retake it: reverse section order (S5 first) and use a timer. Use new questions as the real score.",
+        "Retired as a score on Oct 22, 2026. Logged by hand, not from /drill. After ~7 attempts it measures memory, not understanding. One more run is planned in sprint week 6: focused, timed, single sitting, as a stamina check only. /drill and the weekly self-checks are the real score.",
       ),
       h(
         "div",
@@ -13803,7 +13857,7 @@ IF YOU RETAKE THE OFFICIAL PRACTICE EXAM
       101: ["q2", "q30", "q46", "q62", "q63"],
       102: ["q3", "q4", "q22", "q32", "q37", "q38", "q40", "q59", "q60", "q61"],
       103: ["q6", "q8", "q42", "q64", "q65"],
-      104: ["q13", "q16", "q17", "q29", "q33", "q43", "q44", "q45", "q47", "q51", "q52", "q53", "q54", "q55", "q56", "q57", "q58"],
+      104: ["q13", "q16", "q17", "q29", "q33", "q43", "q44", "q45", "q47", "q51", "q52", "q53", "q54", "q55", "q56", "q57", "q58", "q71"],
       105: ["q14", "q15", "q27", "q28", "q34", "q66", "q67", "q68", "q69"],
       106: "UNSEEN",
     },

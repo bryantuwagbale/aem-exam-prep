@@ -14,6 +14,11 @@ Installable as a PWA, works offline, and runs entirely client-side.
 > to Debugging and Development), the glossary gained 18 terms, and `/weak` picks up 9
 > new tracked areas once, without touching your existing entries.
 
+> **Oct 22, 2026 — practice exam retired as a score.** `/score` logs the Oct 22 official run
+> (37/50: S1 100, S2 68, S3 100, S4 86, S5 40, taken while multitasking) and marks the exam retired
+> as a metric; one focused, timed run stays in sprint week 6 as a stamina check. `/drill` gained
+> q71 (self-authored, verified): CDN logs for cache hit ratio on AEMaaCS, mapped to sprint week 4.
+
 > **Oct 19, 2026 — why your pick is wrong.** After a wrong answer, `/drill` shows a reason for the
 > specific option you chose (and, on multi-select items, for each correct option you missed),
 > above the general explanation. Reasons are written only from each item's audited explanation

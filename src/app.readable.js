@@ -12206,9 +12206,9 @@ public class StampReviewedProcess implements WorkflowProcess {
       },
       102: {
         mechanism:
-          "Two small mechanisms carry a lot of exam weight. First, HTL's format option: when the value is a number, HTL formats it with Java DecimalFormat patterns, so the pattern string decides the output. In those patterns # is an optional digit, 0 is a required digit, and % multiplies by 100 and appends a percent sign. The minus sign for negatives is added for you. Dates use a date pattern with format plus type='date', and strings use {0}, {1} placeholders. Second, Sling Model injection: data-sly-use can pass parameters (@ name='value'), and HTL hands those to the model as request attributes, so the model must adapt from SlingHttpServletRequest and read them with @RequestAttribute. Settings that apply to the whole model go on @Model as attributes (for example defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL); settings for one field go on that field's injector annotation (injectionStrategy = InjectionStrategy.OPTIONAL).",
+          "Two small mechanisms carry a lot of exam weight. First, HTL's format option: when the value is a number, HTL formats it with the number patterns defined in the HTL spec, so the pattern string decides the output. In those patterns # is an optional digit, 0 is a required digit, and % multiplies by 100 and appends a percent sign. The minus sign for negatives is added for you. Dates use a date pattern with format plus type='date', and strings use {0}, {1} placeholders. Second, Sling Model injection: data-sly-use can pass parameters (@ name='value'), and HTL hands those to the model as request attributes, so the model must adapt from SlingHttpServletRequest and read them with @RequestAttribute. Settings that apply to the whole model go on @Model as attributes (for example defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL); settings for one field go on that field's injector annotation (injectionStrategy = InjectionStrategy.OPTIONAL).",
         analogy:
-          "A DecimalFormat pattern is a stencil, not a calculator you drive by hand: put a % on the stencil and the machine multiplies by 100 for you. data-sly-use parameters are notes clipped to the request on its way into the model, which is why you read them off the request.",
+          "An HTL number pattern is a stencil, not a calculator you drive by hand: put a % on the stencil and the machine multiplies by 100 for you. data-sly-use parameters are notes clipped to the request on its way into the model, which is why you read them off the request.",
         artifact: `<!-- HTL -->
 \${'#%' @ format=0.875}            <!-- 88% -->
 \${'0.00' @ format=2.5}            <!-- 2.50 -->
@@ -14484,7 +14484,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
         { q: "What starts a workflow automatically when content under a path changes?", a: "A launcher." },
       ],
       102: [
-        { q: "In an HTL number format pattern, what does % do, and who supplies the minus sign for a negative value?", a: "% multiplies by 100 and appends a percent sign (DecimalFormat). The minus is added automatically; don't put one in the pattern." },
+        { q: "In an HTL number format pattern, what does % do, and who supplies the minus sign for a negative value?", a: "% multiplies by 100 and appends a percent sign (per the HTL spec). The minus is added automatically; don't put one in the pattern." },
         { q: "A value is passed with data-sly-use ... @ name='x'. How does it reach the model, and what reads it?", a: "As a request attribute. The model adapts from SlingHttpServletRequest and reads it with @RequestAttribute." },
         { q: "Make every injected field optional in one place. Where does the setting go, and what is it called?", a: "On @Model: defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL." },
         { q: "Now make only one field optional. Where and what?", a: "On that field's injector annotation (e.g. @ValueMapValue): injectionStrategy = InjectionStrategy.OPTIONAL." },

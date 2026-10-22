@@ -13388,6 +13388,460 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
           "c": "The request log is AEM's per-request timing log, behind both the CDN and the Dispatcher. CDN HITs never appear in it.",
           "d": "Author isn't where site visitors' traffic goes, and an access log behind the CDN never sees CDN HITs."
         }
+      },
+      {
+        "id": "q72",
+        "section": "S2",
+        "type": "single",
+        "stem": "Near the top of a script, an <h2> renders only when ${properties.jcr:title} has a value. Lower down, a 'back to top' link should follow exactly the same condition.",
+        "q": "What's the cleanest way to reuse the condition?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Put data-sly-test.hasTitle=\"${properties.jcr:title}\" on the <h2>, then data-sly-test=\"${hasTitle}\" on the link"
+          },
+          {
+            "id": "b",
+            "text": "Declare it with data-sly-use.hasTitle=\"${properties.jcr:title}\""
+          },
+          {
+            "id": "c",
+            "text": "Repeat the full test, because a data-sly-test identifier only exists inside its own element"
+          },
+          {
+            "id": "d",
+            "text": "Wrap both elements in data-sly-list over the title"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "plain": "You already checked 'is there a title?' once. How do you save that answer under a name and check it again later in the same file?",
+        "explain": "HTL spec (data-sly-test): the identifier stores the test result as-is, and it's global to the script from its declaration onward, so a later element can test ${hasTitle}.",
+        "audit": {
+          "ver": "verified",
+          "note": "Self-authored item, Oct 22, 2026. Checked against the HTL spec, data-sly-test.",
+          "src": [
+            {
+              "t": "HTL Specification (Adobe)",
+              "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"
+            }
+          ]
+        },
+        "why": {
+          "b": "data-sly-use loads a Use-object (a model, script or template), not a test result.",
+          "c": "The spec makes the data-sly-test identifier global to the script after its declaration.",
+          "d": "data-sly-list iterates a collection; it isn't a way to store a condition."
+        }
+      },
+      {
+        "id": "q73",
+        "section": "S2",
+        "type": "single",
+        "stem": "A nav component loops with <li data-sly-list.page=\"${nav.pages}\">. The design needs an extra CSS class on the first <li> only.",
+        "q": "Which expression is true only for the first item?",
+        "options": [
+          {
+            "id": "a",
+            "text": "${itemList.first}"
+          },
+          {
+            "id": "b",
+            "text": "${pageList.first}"
+          },
+          {
+            "id": "c",
+            "text": "${page.first}"
+          },
+          {
+            "id": "d",
+            "text": "${nav.pages.isFirst}"
+          }
+        ],
+        "correct": [
+          "b"
+        ],
+        "plain": "The loop variable was renamed to 'page'. What is its status helper called, and which of its members means 'first'?",
+        "explain": "HTL spec (data-sly-list): naming the item 'page' makes the status variable pageList, with members index, count, first, middle, last, odd and even. itemList only exists when the item keeps the default name.",
+        "audit": {
+          "ver": "verified",
+          "note": "Self-authored item, Oct 22, 2026. Checked against the HTL spec, data-sly-list.",
+          "src": [
+            {
+              "t": "HTL Specification (Adobe)",
+              "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"
+            }
+          ]
+        },
+        "why": {
+          "a": "itemList is the status variable only when the item keeps the default name 'item'. Here it's renamed, so it's pageList.",
+          "c": "'first' lives on the status variable, not on the item itself.",
+          "d": "Invented member; the list itself carries no position flags."
+        }
+      },
+      {
+        "id": "q74",
+        "section": "S2",
+        "type": "single",
+        "stem": "A page script includes its child node 'teaser'. The node's own resource type is a generic text component, but here it must render with my-site/components/teaser instead.",
+        "q": "Which HTL does that?",
+        "options": [
+          {
+            "id": "a",
+            "text": "<div data-sly-resource=\"${'teaser' @ resourceType='my-site/components/teaser'}\"></div>"
+          },
+          {
+            "id": "b",
+            "text": "<div data-sly-include=\"my-site/components/teaser/teaser.html\"></div>"
+          },
+          {
+            "id": "c",
+            "text": "<div data-sly-resource=\"${'teaser' @ selectors='teaser'}\"></div>"
+          },
+          {
+            "id": "d",
+            "text": "<div data-sly-use.teaser=\"my-site/components/teaser\"></div>"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "plain": "You want to render the 'teaser' child node, but force it to use a different component's scripts. Which option overrides the resource type?",
+        "explain": "HTL spec (data-sly-resource): the resourceType option renders the given path with the script mapped to the overriding resource type. The other options are appendPath, prependPath, selectors, addSelectors and removeSelectors.",
+        "audit": {
+          "ver": "verified",
+          "note": "Self-authored item, Oct 22, 2026. Checked against the HTL spec, data-sly-resource.",
+          "src": [
+            {
+              "t": "HTL Specification (Adobe)",
+              "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"
+            }
+          ]
+        },
+        "why": {
+          "b": "data-sly-include runs a script in the current context; it doesn't render the 'teaser' node as its own resource.",
+          "c": "Selectors change which script of the same resource type is picked; they don't change the resource type.",
+          "d": "data-sly-use loads a model or template; it doesn't render a resource."
+        }
+      },
+      {
+        "id": "q75",
+        "section": "S2",
+        "type": "single",
+        "stem": "Shared markup lives in /apps/my-site/components/shared/card-lib.html as <template data-sly-template.card=\"${@ title, link}\">…</template>. Another component needs to render one card.",
+        "q": "How does the other component's script render it?",
+        "options": [
+          {
+            "id": "a",
+            "text": "<sly data-sly-use.lib=\"/apps/my-site/components/shared/card-lib.html\"/><sly data-sly-call=\"${lib.card @ title=model.title, link=model.url}\"/>"
+          },
+          {
+            "id": "b",
+            "text": "<sly data-sly-include=\"/apps/my-site/components/shared/card-lib.html\"/>, which picks up title and link from the caller's variables"
+          },
+          {
+            "id": "c",
+            "text": "<sly data-sly-call=\"${'card-lib.html' @ title=model.title, link=model.url}\"/>"
+          },
+          {
+            "id": "d",
+            "text": "<sly data-sly-template.card=\"${model}\"/>"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "plain": "The card template sits in another file. First you load that file under a name, then you call the template and hand it its inputs.",
+        "explain": "HTL spec (data-sly-template / data-sly-call): load the file with data-sly-use, call ${lib.card}, and pass parameters as expression options. The call scope isn't inherited, so values must be passed explicitly; missing parameters become empty strings.",
+        "audit": {
+          "ver": "verified",
+          "note": "Self-authored item, Oct 22, 2026. Checked against the HTL spec, template and call.",
+          "src": [
+            {
+              "t": "HTL Specification (Adobe)",
+              "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"
+            }
+          ]
+        },
+        "why": {
+          "b": "data-sly-include doesn't call a named template, and template scope isn't inherited from the caller.",
+          "c": "data-sly-call needs a template object loaded first with data-sly-use, not a file name string.",
+          "d": "data-sly-template declares a template; it doesn't call one."
+        }
+      },
+      {
+        "id": "q76",
+        "section": "S2",
+        "type": "single",
+        "stem": "A wrapper <div class=\"teaser-frame\"> is only needed when model.framed is true. When it's false, the wrapper's children must still render, just without the <div>.",
+        "q": "Which attribute on the wrapper does that?",
+        "options": [
+          {
+            "id": "a",
+            "text": "data-sly-test=\"${model.framed}\""
+          },
+          {
+            "id": "b",
+            "text": "data-sly-unwrap=\"${!model.framed}\""
+          },
+          {
+            "id": "c",
+            "text": "data-sly-attribute.class=\"${model.framed}\""
+          },
+          {
+            "id": "d",
+            "text": "data-sly-element=\"${model.framed}\""
+          }
+        ],
+        "correct": [
+          "b"
+        ],
+        "plain": "You want to drop the outer tag but keep everything inside it. Which statement removes only the tag?",
+        "explain": "HTL spec (data-sly-unwrap): removes the host element's tags while always keeping its content; the element is shown only when the expression is false.",
+        "audit": {
+          "ver": "verified",
+          "note": "Self-authored item, Oct 22, 2026. Checked against the HTL spec, data-sly-unwrap.",
+          "src": [
+            {
+              "t": "HTL Specification (Adobe)",
+              "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"
+            }
+          ]
+        },
+        "why": {
+          "a": "data-sly-test removes the element and its content when false, so the children would disappear too.",
+          "c": "data-sly-attribute only changes attributes; the <div> stays.",
+          "d": "data-sly-element changes the tag name; it can't remove the tag and keep the content."
+        }
+      },
+      {
+        "id": "q77",
+        "section": "S2",
+        "type": "single",
+        "stem": "Markup: <a href=\"${model.url}\" data-sly-attribute.target=\"${model.target}\">. An author left the target field empty, so model.target returns an empty string.",
+        "q": "What renders for target?",
+        "options": [
+          {
+            "id": "a",
+            "text": "target=\"\""
+          },
+          {
+            "id": "b",
+            "text": "The target attribute is left out entirely"
+          },
+          {
+            "id": "c",
+            "text": "target=\"null\""
+          },
+          {
+            "id": "d",
+            "text": "Nothing: the whole <a> is skipped"
+          }
+        ],
+        "correct": [
+          "b"
+        ],
+        "plain": "When the value for an attribute is blank, does HTL print an empty attribute or drop it?",
+        "explain": "HTL spec (data-sly-attribute): an empty string removes the attribute; so does false for boolean attributes and an empty array. The element itself still renders.",
+        "audit": {
+          "ver": "verified",
+          "note": "Self-authored item, Oct 22, 2026. Checked against the HTL spec, data-sly-attribute.",
+          "src": [
+            {
+              "t": "HTL Specification (Adobe)",
+              "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"
+            }
+          ]
+        },
+        "why": {
+          "a": "The spec removes the attribute for an empty string rather than printing it empty.",
+          "c": "An empty string isn't turned into the text 'null'.",
+          "d": "data-sly-attribute only affects the attribute; it never removes the element."
+        }
+      },
+      {
+        "id": "q78",
+        "section": "S2",
+        "type": "single",
+        "stem": "A rich text field stores author markup (<p>, <strong>, <a>). It must render as real markup on the page, but a pasted <script> must never execute.",
+        "q": "Which expression fits?",
+        "options": [
+          {
+            "id": "a",
+            "text": "${properties.text}"
+          },
+          {
+            "id": "b",
+            "text": "${properties.text @ context='unsafe'}"
+          },
+          {
+            "id": "c",
+            "text": "${properties.text @ context='html'}"
+          },
+          {
+            "id": "d",
+            "text": "${properties.text @ context='uri'}"
+          }
+        ],
+        "correct": [
+          "c"
+        ],
+        "plain": "You want formatting tags kept but dangerous tags stripped. Which display context filters markup instead of escaping or allowing everything?",
+        "explain": "HTL spec (display contexts): 'html' filters markup to remove dangerous tags. The default in an element body is 'text', which escapes every tag so it shows as visible text. 'unsafe' turns off XSS protection entirely.",
+        "audit": {
+          "ver": "verified",
+          "note": "Self-authored item, Oct 22, 2026. Checked against the HTL spec, display contexts.",
+          "src": [
+            {
+              "t": "HTL Specification (Adobe)",
+              "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"
+            }
+          ]
+        },
+        "why": {
+          "a": "In an element body the default is 'text', which escapes the markup, so authors would see raw tags.",
+          "b": "'unsafe' disables escaping and XSS protection, so a <script> could get through.",
+          "d": "'uri' is for URL values such as href and src, not body markup."
+        }
+      },
+      {
+        "id": "q79",
+        "section": "S2",
+        "type": "single",
+        "stem": "A model is declared @Model(adaptables = Resource.class) and adds @ScriptVariable private Page currentPage. That field never gets populated, and the model fails to adapt.",
+        "q": "What's the most likely cause?",
+        "options": [
+          {
+            "id": "a",
+            "text": "@ScriptVariable reads the script bindings on the request, so the model needs to adapt from SlingHttpServletRequest"
+          },
+          {
+            "id": "b",
+            "text": "currentPage has to be injected with @ValueMapValue instead"
+          },
+          {
+            "id": "c",
+            "text": "Sling Models can't inject into private fields"
+          },
+          {
+            "id": "d",
+            "text": "@ScriptVariable only works inside a Sling servlet"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "plain": "currentPage is one of the objects a script gets handed. Where do those objects live, and can a model built from a plain resource reach them?",
+        "explain": "Apache Sling Models (Available Injectors): the script-bindings injector looks up objects in the script bindings, and applies to request objects carrying the Sling Bindings attribute. A Resource-adapted model has no request, so there are no bindings to read.",
+        "audit": {
+          "ver": "verified",
+          "note": "Self-authored item, Oct 22, 2026. Checked against the Apache Sling Models injector table.",
+          "src": [
+            {
+              "t": "Apache Sling Models",
+              "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"
+            }
+          ]
+        },
+        "why": {
+          "b": "@ValueMapValue reads the resource's properties; currentPage isn't a property.",
+          "c": "Sling Models inject into private fields routinely; field visibility isn't the problem.",
+          "d": "Script bindings exist when a script renders the request (HTL included); a servlet isn't required."
+        }
+      },
+      {
+        "id": "q80",
+        "section": "S2",
+        "type": "single",
+        "stem": "A component node has a child node 'links' holding item0, item1 and item2 (a multifield). The model is @Model(adaptables = Resource.class) and should expose all three.",
+        "q": "Which field declaration gets them as a list in one injection?",
+        "options": [
+          {
+            "id": "a",
+            "text": "@ValueMapValue(name = \"links\") private List<Resource> links;"
+          },
+          {
+            "id": "b",
+            "text": "@ChildResource(name = \"links\") private List<Resource> links;"
+          },
+          {
+            "id": "c",
+            "text": "@RequestAttribute(name = \"links\") private List<Resource> links;"
+          },
+          {
+            "id": "d",
+            "text": "@OSGiService private List<Resource> links;"
+          }
+        ],
+        "correct": [
+          "b"
+        ],
+        "plain": "'links' is a child node with its own children, not a property. Which injector reaches into child nodes?",
+        "explain": "Apache Sling Models: the child-resources injector gets a child resource by name and applies to Resource adaptables. With a parameterized List, it returns all child resources under the named resource.",
+        "audit": {
+          "ver": "verified",
+          "note": "Self-authored item, Oct 22, 2026. Checked against the Apache Sling Models docs.",
+          "src": [
+            {
+              "t": "Apache Sling Models",
+              "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"
+            }
+          ]
+        },
+        "why": {
+          "a": "@ValueMapValue reads properties of this resource; 'links' is a child node, not a property.",
+          "c": "Request attributes are values set on the request, and this model doesn't even adapt from a request.",
+          "d": "@OSGiService injects OSGi services, not content."
+        }
+      },
+      {
+        "id": "q81",
+        "section": "S2",
+        "type": "single",
+        "stem": "The project's proxy of the Core Components Title must return the title in uppercase. Everything else about the Title model stays the same.",
+        "q": "What's Adobe's documented way to do this?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Write a model for the proxy that injects the core model with @Self @Via(type = ResourceSuperType.class), delegates every method, and overrides only getText()"
+          },
+          {
+            "id": "b",
+            "text": "Copy the core Title model class into the project and edit getText()"
+          },
+          {
+            "id": "c",
+            "text": "Edit the Core Components code so getText() uppercases"
+          },
+          {
+            "id": "d",
+            "text": "Change the proxy's sling:resourceSuperType to point at a new custom component"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "plain": "You can't change Adobe's Title code, and its model isn't open for you to copy. How do you wrap it and change one method?",
+        "explain": "Adobe (Customizing Core Components): the models are private, so their logic is extended with a Sling delegation pattern. The example injects the core model with @Self @Via(type = ResourceSuperType.class) and overrides one method. Adobe also says never to modify Core Components code directly.",
+        "audit": {
+          "ver": "verified",
+          "note": "Self-authored item, Oct 22, 2026. Checked against Adobe's Customizing Core Components page and the Sling Models @Via docs.",
+          "src": [
+            {
+              "t": "Customizing Core Components",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/developing/customizing"
+            },
+            {
+              "t": "Apache Sling Models",
+              "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"
+            }
+          ]
+        },
+        "why": {
+          "b": "Adobe says the models are private and must be extended by delegation, not copied.",
+          "c": "Adobe says never to modify Core Components code directly.",
+          "d": "Repointing the supertype drops the core Title's logic instead of extending it."
+        }
       }
     ];
   (Object.assign(Ms, SMs), As.push(...NEW_DRILLS), Yp.push(...NEW_GLOSSARY), Lf.push(...NEW_WEAK));
@@ -13855,7 +14309,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
   /* ===== Oct 15 2026 update: self-check gate + drill-this-week ===== */
   var WEEK_DRILLS = {
       101: ["q2", "q30", "q46", "q62", "q63"],
-      102: ["q3", "q4", "q22", "q32", "q37", "q38", "q40", "q59", "q60", "q61"],
+      102: ["q3", "q4", "q22", "q32", "q37", "q38", "q40", "q59", "q60", "q61", "q72", "q73", "q74", "q75", "q76", "q77", "q78", "q79", "q80", "q81"],
       103: ["q6", "q8", "q42", "q64", "q65"],
       104: ["q13", "q16", "q17", "q29", "q33", "q43", "q44", "q45", "q47", "q51", "q52", "q53", "q54", "q55", "q56", "q57", "q58", "q71"],
       105: ["q14", "q15", "q27", "q28", "q34", "q66", "q67", "q68", "q69"],

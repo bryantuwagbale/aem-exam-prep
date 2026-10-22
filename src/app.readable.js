@@ -9845,6 +9845,10 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
           "note": "Explanation fixed: it named a non-existent @Injected annotation.",
           "src": [
             {
+              "t": "WKND tutorial: Custom Component (Adobe)",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/getting-started-wknd-tutorial-develop/project-archetype/custom-component"
+            },
+            {
               "t": "Apache Sling Models",
               "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"
             },
@@ -11383,6 +11387,10 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
           "ver": "verified",
           "src": [
             {
+              "t": "WKND tutorial: Custom Component (Adobe)",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/getting-started-wknd-tutorial-develop/project-archetype/custom-component"
+            },
+            {
               "t": "Apache Sling Models",
               "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"
             }
@@ -12318,7 +12326,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
 - One run this week only, as a stamina check
 - Single sitting, timer on, no multitasking`,
         delta65:
-          "Before booking, check certification.adobe.com for the live exam's time limit and passing score, then divide the time by the number of questions to get your per-question budget.",
+          "Adobe's exam page (checked Oct 22, 2026): 100 minutes, passing score 32/50, online proctored, English only. That is about 2 minutes per question, so a 90-second cap leaves time to revisit flagged items. Re-check the page before booking.",
         handsOn:
           "Run /drill on S5 and S2 only, using the new items, with the timer on. For any miss, open the matching sprint week and redo its hands-on task. Book the exam once the readiness checklist on /plan is all green. Avoid Thanksgiving week (Nov 26).",
         takeaways: [
@@ -12906,6 +12914,10 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
           "ver": "verified",
           "src": [
             {
+              "t": "WKND tutorial: Custom Component (Adobe)",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/getting-started-wknd-tutorial-develop/project-archetype/custom-component"
+            },
+            {
               "t": "Apache Sling Models",
               "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"
             },
@@ -13422,6 +13434,10 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
           "ver": "verified",
           "note": "Self-authored item, Oct 22, 2026. Checked against the HTL spec, data-sly-test.",
           "src": [
+            {
+              "t": "WKND tutorial: Custom Component (Adobe)",
+              "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/getting-started-wknd-tutorial-develop/project-archetype/custom-component"
+            },
             {
               "t": "HTL Specification (Adobe)",
               "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"
@@ -13945,6 +13961,148 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
         ),
     );
   }
+
+  /* ===== Oct 22 2026: Adobe's official exam facts + prep-guide reading list ===== */
+  var OFFICIAL_EXAM = {
+      url: "https://certification.adobe.com/certification/sites-developer-professional-v2/1232?tab=certificate1",
+      checked: "2026-10-22",
+      facts: [
+        ["Time limit", "1 h 40 min (100 min)"],
+        ["Questions", "50 scored (prep guide)"],
+        ["Passing score", "32 / 50 (64%)"],
+        ["Budget", "about 2 min per question"],
+        ["Format", "1-of-4 and 2+-of-5+; no guessing penalty (prep guide)"],
+        ["Delivery", "online proctored, camera on, English only"],
+        ["Cost", "$125"],
+      ],
+      note: "Time, passing score, cost and delivery are from Adobe's exam page. Question count and formats are from Adobe's Exam Prep Guide (transcribed July 2026). Re-check the exam page before booking.",
+    },
+    OFFICIAL_READING = [
+      { sec: "S1", objectives: ["Purpose of Dispatcher configurations and caching", "Steps to configure multi-site in AEM", "Create and manage OSGi configurations", "Manage custom Oak indexes", "Create and manage AEM custom logs"],
+        res: [
+          { t: "Dispatcher Overview", u: "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/dispatcher", n: "Stand-in: the guide's Dispatcher list wasn't captured" },
+          { t: "Caching in AEM as a Cloud Service", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/content-delivery/caching", n: "Stand-in: the guide's Dispatcher list wasn't captured" },
+          { t: "Multi Site Manager and Translation", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/administering/reusing-content/msm-and-translation" },
+          { t: "Configuring Live Copy Synchronization", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/administering/reusing-content/msm/live-copy-sync-config" },
+          { t: "Configuring OSGi", u: "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/implementing/deploying/configuring-osgi.html" },
+          { t: "OSGi Configuration Settings", u: "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/configuring/osgi-configuration-settings" },
+          { t: "Best Practices for Queries and Indexing", u: "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/practices/best-practices-for-queries-and-indexing" },
+          { t: "SAML 2.0 Authentication Handler", u: "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/security/saml-2-0-authenticationhandler" },
+        ] },
+      { sec: "S2", objectives: ["Implement a proxy of a Core Component", "Create component functionality: HTL, models, services", "Develop workflows", "Purpose of Content Fragments vs Experience Fragments", "Find the correct log (prep guide only)", "Implement editable templates"],
+        res: [
+          { t: "Using Core Components", u: "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/get-started/using" },
+          { t: "Working with Workflows", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/authoring/workflows/overview" },
+          { t: "Creating Page Templates", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/authoring/page-editor/templates", n: "Now titled 'Templates to Create Pages that are Editable with the Page Editor'" },
+          { t: "Working with Content Fragments", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/content-fragments/content-fragments" },
+          { t: "AEM GraphQL API for use with Content Fragments", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/assets/content-fragments/content-fragments-graphql" },
+          { t: "SPA Introduction and Walkthrough", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/hybrid/introduction" },
+          { t: "Developing and Extending Workflows", u: "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/developing/extending-aem/extending-workflows/workflows" },
+          { t: "Extending Workflow Functionality", u: "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/developing/extending-aem/extending-workflows/workflows-customizing-extending" },
+          { t: "Page Templates - Editable", u: "https://experienceleague.adobe.com/docs/experience-manager-65/developing/platform/templates/page-templates-editable.html?lang=en" },
+          { t: "Exporting Experience Fragments to Adobe Target", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/integrations/experience-fragments-target" },
+          { t: "Debugging AEM as a Cloud Service using logs", u: "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs" },
+          { t: "Monitoring and maintaining your AEM instance", u: "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/configuring/monitoring-and-maintaining" },
+          { t: "HTL Specification", u: "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md" },
+          { t: "Client Request Logging (Apache Sling)", u: "https://sling.apache.org/documentation/development/client-request-logging.html" },
+          { t: "Custom component - storing value at template level - data-sly-resource", u: "https://experienceleaguecommunities.adobe.com/adobe-experience-manager-sites-8/custom-component-storing-value-at-template-level-data-sly-resource-15725", n: "Community thread; open it yourself (it couldn't be read automatically)" },
+        ] },
+      { sec: "S3", objectives: ["Correct Maven project structure", "Configure projects from archetypes"],
+        res: [
+          { t: "AEM Project Structure", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/aem-project-content-package-structure" },
+          { t: "Project Setup (WKND tutorial)", u: "https://experienceleague.adobe.com/en/docs/experience-manager-learn/getting-started-wknd-tutorial-develop/project-archetype/project-setup" },
+          { t: "AEM Project Archetype", u: "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/developing/archetype/overview" },
+        ] },
+      { sec: "S4", objectives: ["Purpose of AEM maintenance releases", "Configure AEM across topologies", "Issues with the replication process", "Create custom Oak indexes"],
+        res: [
+          { t: "Operations Dashboard", u: "https://experienceleague.adobe.com/docs/experience-manager-65/administering/operations/operations-dashboard.html?lang=en" },
+          { t: "Replication", u: "https://experienceleague.adobe.com/docs/experience-manager-65/deploying/configuring/replication.html?lang=en" },
+          { t: "Troubleshooting Replication", u: "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/configuring/troubleshoot-rep" },
+          { t: "Oak Queries and Indexing", u: "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/deploying/queries-and-indexing" },
+          { t: "Author and Publish Architectural Overview (AEM Screens)", u: "https://experienceleague.adobe.com/en/docs/experience-manager-screens/user-guide/administering/author-publish/author-publish-architecture-overview" },
+          { t: "Indexing best practices in AEM", u: "https://experienceleague.adobe.com/en/docs/experience-manager-learn/foundation/development/understand-indexing-best-practices" },
+          { t: "Remote debugging the AEM SDK", u: "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-sdk/remote-debugging" },
+          { t: "Deprecated and Removed Features and APIs", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/release-notes/deprecated-removed-features" },
+          { t: "Current Release Notes (maintenance releases)", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/release-notes/release-notes/release-notes-current", n: "The guide points at the current maintenance release notes" },
+        ] },
+      { sec: "S5", objectives: ["Which log to analyze", "Debug client libraries", "Debug Dispatcher configurations and caching", "Debug issues in AEM environments"],
+        res: [
+          { t: "Monitoring and maintaining your AEM instance", u: "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/configuring/monitoring-and-maintaining" },
+          { t: "Logging", u: "https://experienceleague.adobe.com/docs/experience-manager-65/deploying/configuring/configure-logging.html?lang=en" },
+          { t: "Debugging AEM as a Cloud Service with Repository Browser", u: "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/repository-browser" },
+          { t: "Custom Standalone Install", u: "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/deploying/custom-standalone-install" },
+          { t: "How to debug client-side issues in the AEM Touch UI or Classic UI", u: "https://experienceleague.adobe.com/docs/experience-cloud-kcs/kbarticles/KA-16935.html" },
+        ] },
+    ];
+  function slugKey(u) {
+    try {
+      let x = new URL(u), segs = x.pathname.replace(/\.html$/, "").toLowerCase().split("/").filter(Boolean);
+      return x.hostname + ":" + segs.slice(-2).join("/");
+    } catch (e) { return u; }
+  }
+  var OFFICIAL_KEYS = new Set(OFFICIAL_READING.flatMap((s) => s.res.filter((r) => !r.n || !/^Stand-in/.test(r.n)).map((r) => slugKey(r.u))));
+  function onReadingList(src) { return !!(src && src.some((x) => OFFICIAL_KEYS.has(slugKey(x.u)))); }
+  function OfficialExamCard() {
+    let h = i.default.createElement,
+      [open, setOpen] = (0, i.useState)(null),
+      lab = { fontFamily: MONO, fontSize: 10.5, color: f.dim, letterSpacing: 0.6, textTransform: "uppercase" };
+    return h(
+      me,
+      { style: { padding: 18 } },
+      h("h2", { style: { margin: "0 0 4px", fontFamily: JET, fontSize: 16, color: f.text } }, "adobe's official exam"),
+      h("p", { style: { margin: "0 0 12px", fontSize: 12.5, color: f.dim, fontFamily: SANS, lineHeight: 1.5 } }, OFFICIAL_EXAM.note),
+      h(
+        "div",
+        { style: { display: "grid", gridTemplateColumns: "minmax(90px, max-content) 1fr", gap: "5px 12px", marginBottom: 12 } },
+        OFFICIAL_EXAM.facts.flatMap(([k, v]) => [
+          h("span", { key: k + "k", style: { fontFamily: MONO, fontSize: 12, color: f.dim } }, k),
+          h("span", { key: k + "v", style: { fontFamily: SANS, fontSize: 13, color: f.text } }, v),
+        ]),
+      ),
+      h("a", { href: OFFICIAL_EXAM.url, target: "_blank", rel: "noopener noreferrer", style: { color: f.cyan, fontSize: 12.5, fontFamily: SANS, textDecoration: "underline" } }, "Adobe exam page (checked " + OFFICIAL_EXAM.checked + ") ↗"),
+      h("div", { style: { ...lab, margin: "16px 0 6px" } }, "objectives + adobe's reading list"),
+      h(
+        "p",
+        { style: { margin: "0 0 8px", fontSize: 12, color: f.dim, fontFamily: SANS, lineHeight: 1.45 } },
+        "Titles come from Adobe's Exam Prep Guide; links are the current pages with those titles. Drill items that cite one of these show 'on Adobe's reading list'.",
+      ),
+      h(
+        "div",
+        { style: { display: "grid", gap: 8 } },
+        OFFICIAL_READING.map((s) => {
+          let sec = Ft.find((x) => x.id === s.sec) || {},
+            isOpen = open === s.sec;
+          return h(
+            "div",
+            { key: s.sec, style: { border: `1px solid ${f.border}`, borderRadius: 5, background: f.panelAlt } },
+            h(
+              "button",
+              { onClick: () => setOpen(isOpen ? null : s.sec), style: { width: "100%", textAlign: "left", background: "none", border: "none", padding: "10px 12px", cursor: "pointer", display: "flex", justifyContent: "space-between", gap: 8, color: f.text, fontFamily: SANS, fontSize: 13.5 } },
+              h("span", null, h("span", { style: { fontFamily: MONO, color: sec.color, marginRight: 8 } }, s.sec), sec.name || ""),
+              h("span", { style: { fontFamily: MONO, color: f.dim } }, (isOpen ? "− " : "+ ") + s.res.length),
+            ),
+            isOpen &&
+              h(
+                "div",
+                { style: { padding: "0 12px 12px" } },
+                h("div", { style: { ...lab, margin: "2px 0 4px" } }, "objectives"),
+                h("ul", { style: { margin: "0 0 10px", paddingLeft: 18, fontSize: 13, lineHeight: 1.5, color: f.text, fontFamily: SANS } }, s.objectives.map((o, k) => h("li", { key: k }, o))),
+                h("div", { style: { ...lab, margin: "2px 0 4px" } }, "reading list"),
+                s.res.map((r, k) =>
+                  h(
+                    "div",
+                    { key: k, style: { marginBottom: 5 } },
+                    h("a", { href: r.u, target: "_blank", rel: "noopener noreferrer", style: { color: f.cyan, fontSize: 13, fontFamily: SANS, overflowWrap: "anywhere", textDecoration: "underline", textUnderlineOffset: 2 } }, r.t, " ↗"),
+                    r.n && h("div", { style: { fontSize: 11.5, color: f.dim, fontFamily: SANS } }, r.n),
+                  ),
+                ),
+              ),
+          );
+        }),
+      ),
+    );
+  }
+
   function OfficialRunsCard() {
     let h = i.default.createElement,
       latest = OFFICIAL_RUNS[OFFICIAL_RUNS.length - 1];
@@ -14094,7 +14252,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
       h(
         "p",
         { style: { margin: "12px 0 0", fontSize: 12.5, color: f.dim, fontFamily: SANS, lineHeight: 1.5 } },
-        "Exam: late November. Check the time limit at certification.adobe.com and divide by the question count for a per-question budget. Avoid Thanksgiving week (Nov 26).",
+        "Exam: Nov 24 target. Adobe's exam page: 100 minutes, passing score 32/50, so about 2 minutes per question. Avoid Thanksgiving week (Nov 26).",
       ),
     );
   }
@@ -14515,6 +14673,8 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
         { style: { fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: col, marginBottom: a.note ? 3 : 0 } },
         (a.ver === "verified" ? "\u2713 " : a.ver === "corrected" ? "\u270E " : "\u25D0 ") + lab,
       ),
+      onReadingList(a.src) &&
+        i.default.createElement("div", { style: { fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", color: f.cyan, marginBottom: 3 } }, "\u2605 on Adobe's reading list"),
       a.note && i.default.createElement("div", { style: { fontSize: 12.5, color: f.dim, lineHeight: 1.45, fontFamily: "'IBM Plex Sans', sans-serif" } }, a.note),
       i.default.createElement(SourceList, { src: a.src }),
     );
@@ -17016,6 +17176,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
     return i.default.createElement(
       "div",
       { style: { display: "grid", gap: 16 } },
+      i.default.createElement(OfficialExamCard, null),
       i.default.createElement(RulesCard, null),
       i.default.createElement(
         me,

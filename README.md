@@ -14,6 +14,11 @@ Installable as a PWA, works offline, and runs entirely client-side.
 > to Debugging and Development), the glossary gained 18 terms, and `/weak` picks up 9
 > new tracked areas once, without touching your existing entries.
 
+> **Oct 22, 2026 — Adobe's official prep, mapped.** `/guide` opens with Adobe's exam facts (100 min,
+> passing 32/50, about 2 min per question, from the public exam page) and every objective with the
+> reading list from Adobe's Exam Prep Guide, linked to current Experience League pages. Drill items
+> citing one of those pages show "on Adobe's reading list". `/plan` uses the real exam numbers.
+
 > **Oct 22, 2026 — sprint week 2 drills.** `/drill` gained q72–q81 (self-authored, each verified
 > against the HTL spec, Apache Sling Models docs or Adobe's Core Components page): data-sly-test
 > identifiers, list status variables, resourceType override, template/call, unwrap, attribute

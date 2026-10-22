@@ -14,6 +14,10 @@ Installable as a PWA, works offline, and runs entirely client-side.
 > to Debugging and Development), the glossary gained 18 terms, and `/weak` picks up 9
 > new tracked areas once, without touching your existing entries.
 
+> **Oct 22, 2026 — focused /plan.** `/plan` opens on this week only: days to the Nov 24 target,
+> the week's title, "Read the lesson", "Drill this week", and a pointer to the self-check. "Show full
+> plan" brings back everything else, and the choice is remembered per device.
+
 > **Oct 22, 2026 — Adobe's official prep, mapped.** `/guide` opens with Adobe's exam facts (100 min,
 > passing 32/50, about 2 min per question, from the public exam page) and every objective with the
 > reading list from Adobe's Exam Prep Guide, linked to current Experience League pages. Drill items

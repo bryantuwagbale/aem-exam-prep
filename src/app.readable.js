@@ -12161,6 +12161,7 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
     Sf = "aem-prep-console:";
   /* ===== Oct 14 2026 update: 6-week sprint to the exam ===== */
   var SPRINT_START_DEFAULT = "2026-10-15",
+    EXAM_TARGET = "2026-11-24",
     SPs = [
       { n: 101, label: "W1", dates: "Oct 15–21", title: "Path map + Workflows (models, processes, launchers)", sections: ["S2", "S4"] },
       { n: 102, label: "W2", dates: "Oct 22–28", title: "HTL formatting + Sling Model injection", sections: ["S2"] },
@@ -14856,6 +14857,9 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
       x = SPs.filter((y) => e[y.n] === "done").length,
       xo = Ps.filter((y) => e[y.n] === "done").length,
       [ao, setAo] = (0, i.useState)(!1),
+      [full, setFullRaw] = (0, i.useState)(() => { try { return localStorage.getItem("apc-plan-full") === "1"; } catch (e) { return !1; } }),
+      setFull = (v) => { setFullRaw(v); try { localStorage.setItem("apc-plan-full", v ? "1" : "0"); } catch (e) {} },
+      [lessonOpen, setLessonOpen] = (0, i.useState)(!1),
       h = Math.max(0, n - 1) - x,
       rowFn = (arr, todayN) => (y, I) => {
           let v = e[y.n] || "pending",
@@ -14999,9 +15003,58 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
               }),
           );
         };
+    let curW = SPs.find((w) => w.n === 100 + n) || SPs[SPs.length - 1],
+      curDone = e[curW.n] === "done",
+      daysLeft = Math.ceil((new Date(EXAM_TARGET + "T09:00:00") - new Date()) / 864e5),
+      toggleBtn = (label, onClick) =>
+        i.default.createElement(
+          "button",
+          { onClick, style: { justifySelf: "start", padding: "6px 12px", borderRadius: 5, cursor: "pointer", border: `1px solid ${f.border}`, background: "transparent", color: f.dim, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5 } },
+          label,
+        );
+    if (!full)
+      return i.default.createElement(
+        "div",
+        { style: { display: "grid", gap: 14 } },
+        i.default.createElement(
+          me,
+          { style: { padding: "14px 18px" } },
+          i.default.createElement("div", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 15, color: f.text, fontWeight: 700 } }, "Week ", Math.min(n, 6), " of 6", daysLeft > 0 ? ` \xB7 exam in ${daysLeft} days` : ""),
+          i.default.createElement("div", { style: { fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 12.5, color: f.dim, marginTop: 3 } }, "Target: Nov 24"),
+        ),
+        i.default.createElement(
+          me,
+          { style: { padding: 18 } },
+          i.default.createElement("div", { style: { fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, letterSpacing: 0.6, textTransform: "uppercase", color: f.amber, marginBottom: 4 } }, "this week \xB7 sprint " + (curW.label || "W" + curW.n)),
+          i.default.createElement("div", { style: { fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 17, color: curDone ? f.dim : f.text, fontWeight: 600, marginBottom: 12, textDecoration: curDone ? "line-through" : "none" } }, curW.title),
+          i.default.createElement(
+            "div",
+            { style: { display: "grid", gap: 8 } },
+            i.default.createElement(
+              "button",
+              { onClick: () => setLessonOpen((z) => !z), style: { padding: "12px 14px", borderRadius: 6, cursor: "pointer", border: `1px solid ${f.border}`, background: f.panelAlt, color: f.text, fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14.5, textAlign: "left" } },
+              (lessonOpen ? "\u25BE " : "\u25B8 ") + "1 \xB7 Read the lesson (once)",
+            ),
+            i.default.createElement(
+              "button",
+              { onClick: () => dw && dw(weekDrillIds(curW.n, sx)), style: { padding: "12px 14px", borderRadius: 6, cursor: "pointer", border: "none", background: f.amber, color: "#1A1206", fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14.5, fontWeight: 700, textAlign: "left" } },
+              "2 \xB7 Drill this week",
+            ),
+            i.default.createElement("div", { style: { fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 12.5, color: f.dim, padding: "2px 2px 0" } }, "3 \xB7 Self-check: at the end of the lesson"),
+          ),
+        ),
+        lessonOpen &&
+          i.default.createElement(
+            me,
+            { style: { padding: 0 } },
+            i.default.createElement(am, { week: curW, taught: curDone, onMarkTaught: t, sessions: sx, onDrillWeek: dw }),
+          ),
+        toggleBtn("show full plan", () => setFull(!0)),
+      );
     return i.default.createElement(
       "div",
       { style: { display: "grid", gap: 16 } },
+      toggleBtn("back to this week only", () => setFull(!1)),
       i.default.createElement(
         me,
         { style: { padding: 18 } },

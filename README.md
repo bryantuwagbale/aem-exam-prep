@@ -14,6 +14,12 @@ Installable as a PWA, works offline, and runs entirely client-side.
 > to Debugging and Development), the glossary gained 18 terms, and `/weak` picks up 9
 > new tracked areas once, without touching your existing entries.
 
+> **Oct 22, 2026 — sprint week 2 drills.** `/drill` gained q72–q81 (self-authored, each verified
+> against the HTL spec, Apache Sling Models docs or Adobe's Core Components page): data-sly-test
+> identifiers, list status variables, resourceType override, template/call, unwrap, attribute
+> removal, the html context, @ScriptVariable vs adaptable, @ChildResource lists, and Core Component
+> delegation. All are mapped to sprint week 2's "drill this week".
+
 > **Oct 22, 2026 — practice exam retired as a score.** `/score` logs the Oct 22 official run
 > (37/50: S1 100, S2 68, S3 100, S4 86, S5 40, taken while multitasking) and marks the exam retired
 > as a metric; one focused, timed run stays in sprint week 6 as a stamina check. `/drill` gained

@@ -5,6 +5,15 @@ Installable as a PWA, works offline, and runs entirely client-side.
 
 ## What's in it
 
+> **Nov 16, 2026 — final sprint to the Dec 5 exam (1:00 PM CT).** `/plan` now runs six date-based
+> phases (Nov 16 – Dec 5): P1 logs + consoles, P2 Dispatcher + clientlibs, P3 HTL/Sling Models/OSGi/servlets
+> (light over Thanksgiving), P4 workflows/templates/CF-XF/replication/queries, P5 S1/S3/S4 refresh + timed
+> sets, P6 taper + exam day. Each phase has a lesson, self-check and drill mapping; P6 drills the items you've
+> missed. The Oct 15 – Nov 25 sprint moved to a collapsed archive with taught marks intact. The readiness card
+> is now an exam-ready checklist (ID, time zone, system test, room, reschedule cut-off). `/drill` gained
+> q82–q95 (self-authored; S5 and S2). Content fixes: Developer Console = Configurations + OSGi Components,
+> AEMaaCS index naming, minify wording (Adobe sources conflict), /guide exam facts (unscored items, logistics).
+
 > **Oct 14, 2026 update — 6-week sprint to the exam.** `/plan` now runs a 6-week sprint
 > (Oct 15 – Nov 25) with full teach content per week, a "ready to book" checklist, and
 > the daily 30-minute routine. The original 12-week plan is kept in a collapsed archive

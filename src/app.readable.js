@@ -12160,9 +12160,9 @@ GET /graphql/execute.json/myproject/getArticleBySlug;slug=foo`,
     ],
     Sf = "aem-prep-console:";
   /* ===== Oct 14 2026 update: 6-week sprint to the exam ===== */
-  var SPRINT_START_DEFAULT = "2026-10-15",
-    EXAM_TARGET = "2026-11-24",
-    SPs = [
+  var SPRINT_START_DEFAULT = "2026-11-16",
+    EXAM_TARGET = "2026-12-05",
+    OCT_SPs = [
       { n: 101, label: "W1", dates: "Oct 15–21", title: "Path map + Workflows (models, processes, launchers)", sections: ["S2", "S4"] },
       { n: 102, label: "W2", dates: "Oct 22–28", title: "HTL formatting + Sling Model injection", sections: ["S2"] },
       { n: 103, label: "W3", dates: "Oct 29–Nov 4", title: "Templates, policies, Style System", sections: ["S2", "S1"] },
@@ -12285,28 +12285,28 @@ Content-Length: 0
           "/filter = what gets in (blocked = 404); /cache /rules = what gets cached; flush request + /invalidate + .stat files = when it's stale",
           "Stale content right after publishing usually means the flush agent",
           "Misconfigured property on AEMaaCS → Developer Console: Configurations + Components",
-          "Clientlibs: allowProxy for /etc.clientlibs, jsProcessor/cssProcessor for minify (HTML Library Manager defaults aren't supported on AEMaaCS), dumplibs to inspect",
+          "Clientlibs: allowProxy for /etc.clientlibs; minify = HTML Library Manager Minify option (per-clientlib: jsProcessor/cssProcessor; Adobe sources disagree on AEMaaCS specifics); dumplibs to inspect",
         ],
       },
       105: {
         mechanism:
-          "Index definitions always live at the repository root under /oak:index. On 6.5 you can create them directly in CRXDE; on AEMaaCS they must ship in code, because the repository is immutable at runtime. In a content package the colon can't be part of a folder name, so the folder is written _oak_index and FileVault maps it back to oak:index. AEMaaCS also names custom indexes with a -custom-<n> suffix, and every change bumps the number so the platform can build the new version alongside the old one. On 6.5 you reindex by setting reindex=true on the definition. Explain Query (in Query Performance) shows whether a query uses an index. Replication pushes content from Author to Publish as the replication (transport) user, not the admin, so permission failures are about that user. Registering a namespace is a repository-level action that needs jcr:namespaceManagement. AEMaaCS replaces replication agents with Sling Content Distribution. Instances find each other through Sling Discovery, which builds the topology that job offloading depends on.",
+          "Index definitions always live at the repository root under /oak:index. On 6.5 you can create them directly in CRXDE; on AEMaaCS they must ship in code, because the repository is immutable at runtime. In a content package the colon can't be part of a folder name, so the folder is written _oak_index and FileVault maps it back to oak:index. AEMaaCS names a customized out-of-the-box index <name>-<productVersion>-custom-<n> (e.g. damAssetLucene-8-custom-1) and gives a fully custom index a prefix (e.g. acme.productSearch-1-custom-1); every change bumps the custom number so the platform can build the new version alongside the old one. Custom indexes must be Lucene. On 6.5 you reindex by setting reindex=true on the definition. Explain Query (in Query Performance) shows whether a query uses an index. Replication pushes content from Author to Publish as the replication (transport) user, not the admin, so permission failures are about that user. Registering a namespace is a repository-level action that needs jcr:namespaceManagement. AEMaaCS replaces replication agents with Sling Content Distribution. Instances find each other through Sling Discovery, which builds the topology that job offloading depends on.",
         analogy:
           "_oak_index is a nickname printed on the shipping box because the courier can't print colons. It's the same address when it's unpacked. The replication user is the delivery driver: if the driver's badge doesn't open the door, it doesn't matter that the building manager (admin) has a master key.",
         artifact: `ui.apps/src/main/content/jcr_root/_oak_index/
-  myProductLucene-custom-1/.content.xml
+  acme.productSearch-1-custom-1/.content.xml
     jcr:primaryType="oak:QueryIndexDefinition"
     type="lucene" async="[async,nrt]"
 
 # 6.5 only: rebuild an existing index
-/oak:index/myProductLucene  reindex=true`,
+/oak:index/productSearch  reindex=true`,
         delta65:
           "6.5: indexes created or edited in CRXDE, reindex=true, replication agents, and service packs you apply yourself, testing on stage before production. AEMaaCS: indexes only through code, versioned names, Sling Content Distribution, and maintenance updates Adobe applies through the pipeline.",
         handsOn:
           "On the local SDK, browse /oak:index in CRXDE and open one Lucene definition. Run a query through Explain Query. Open /system/console/topology to see the topology view. On author, open the replication agent page and read its log.",
         takeaways: [
           "Indexes = /oak:index at the root; in code = _oak_index (same place, encoded)",
-          "AEMaaCS index naming: customized OOTB = <name>-custom-<n>; fully custom = prefix.<name>-<n>-custom-<m>",
+          "AEMaaCS index naming: customized OOTB = <name>-<productVersion>-custom-<n>; fully custom = prefix.<name>-<n>-custom-<m>; Lucene only",
           "Replication runs as the replication user; namespace replication needs jcr:namespaceManagement",
           "AEMaaCS moves content with Sling Content Distribution",
           "Instances join a topology via Sling Discovery (through a Topology Connector); invented names like 'Topology Offloading Bridge' are traps",
@@ -12377,9 +12377,12 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
     ],
     SEC_TRUST = { S1: "none — memorized", S2: "medium — dropped to 68% despite repeats, a real gap", S3: "none — memorized", S4: "low — seen many times", S5: "low — multitasked; misses were rule-1 and log-table items" },
     READINESS = [
-      { id: "r1", text: "Explain every Oct 14 review topic without notes, naming the rule behind each" },
-      { id: "r2", text: "One focused practice run in a single sitting, no guessing" },
-      { id: "r3", text: "≥80% on new questions, and ≥70% in Analyzing & Debugging" },
+      { id: "r4", text: "≥80% first-attempt on new items overall, and ≥70% in S5 (Analyzing & Debugging)" },
+      { id: "r5", text: "Legal name on your Adobe profile matches your physical government ID (a fix needs a support ticket ≥72 h ahead: by 1:00 PM CT Wed Dec 2)" },
+      { id: "r6", text: "Profile time zone shows Central, so the exam reads 1:00 PM CT" },
+      { id: "r7", text: "System test + Process Tracker run on the exam computer in Chrome or Edge; remote-sharing apps uninstalled" },
+      { id: "r8", text: "Room ready: desk clear, external monitors unplugged, phone/watch/earbuds away, power plugged in, pop-up blocker off" },
+      { id: "r9", text: "Go/no-go decided before 1:00 PM CT Fri Dec 4 (reschedule or cancel needs >24 h)" },
     ],
     NEW_WEAK = [
       { id: "w7", text: "S5: pick the right log — error / access / request / audit", closed: !1 },
@@ -12389,7 +12392,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
       { id: "w11", text: "S2: data-sly-use parameters → @RequestAttribute", closed: !1 },
       { id: "w12", text: "S2/S1: Allowed Styles vs Default CSS; allowed components on the Layout Container policy", closed: !1 },
       { id: "w13", text: "S4: replication user permissions (incl. jcr:namespaceManagement)", closed: !1 },
-      { id: "w14", text: "S4: Oak index locations (/oak:index vs _oak_index), naming, reindex", closed: !1 },
+      { id: "w14", text: "S1/S4: Oak index locations (/oak:index vs _oak_index), naming, reindex", closed: !1 },
       { id: "w15", text: "Exam habit: give S5 fresh time; 90s then flag and move on", closed: !1 },
     ],
     NEW_GLOSSARY = [
@@ -12409,7 +12412,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
       { term: "jcr:namespaceManagement", def: "The repository-level privilege needed to register a new namespace." },
       { term: "_oak_index", def: "How the oak:index folder is spelled inside a code package, since folder names can't contain a colon." },
       { term: "process.label", def: "The OSGi property that names a custom workflow process in the Process Step dropdown." },
-      { term: "HTML Library Manager", def: "The OSGi config for clientlib processing on 6.5. On AEMaaCS, setting its defaults isn't supported; use jsProcessor/cssProcessor on the clientlib." },
+      { term: "HTML Library Manager", def: "The Adobe Granite OSGi config for clientlib processing, including the Minify option (default compressor: YUI). Per-clientlib overrides use jsProcessor/cssProcessor. Adobe's sources disagree on which applies on AEMaaCS." },
       { term: "flush agent", def: "The replication agent that tells the Dispatcher to drop cached copies after a publish." },
     ];
   var NEW_DRILLS = [
@@ -13865,7 +13868,9 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
   /* ===== Oct 14 2026 update: helper + new UI blocks ===== */
   function wlab(n) {
     let w = SPs.find((x) => x.n === n);
-    return w ? "sprint " + w.label : "W" + n;
+    if (w) return "phase " + w.label;
+    let o = OCT_SPs.find((x) => x.n === n);
+    return o ? "Oct sprint " + o.label : "W" + n;
   }
   var MONO = "'IBM Plex Mono', monospace",
     SANS = "'IBM Plex Sans', sans-serif",
@@ -13966,17 +13971,22 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
   /* ===== Oct 22 2026: Adobe's official exam facts + prep-guide reading list ===== */
   var OFFICIAL_EXAM = {
       url: "https://certification.adobe.com/certification/sites-developer-professional-v2/1232?tab=certificate1",
-      checked: "2026-10-22",
+      checked: "2026-11-16",
       facts: [
+        ["Your exam", "Sat Dec 5, 2026, 1:00 PM CT"],
         ["Time limit", "1 h 40 min (100 min)"],
-        ["Questions", "50 scored (prep guide)"],
+        ["Questions", "50 scored, plus up to 10 unscored you can't tell apart (Adobe FAQ)"],
         ["Passing score", "32 / 50 (64%)"],
-        ["Budget", "about 2 min per question"],
+        ["Budget", "~1.6 min per item if 60; first pass ~1.3 min"],
         ["Format", "1-of-4 and 2+-of-5+; no guessing penalty (prep guide)"],
         ["Delivery", "online proctored, camera on, English only"],
         ["Cost", "$125"],
+        ["Reschedule/cancel", "more than 24 h ahead: before 1:00 PM CT Fri Dec 4"],
+        ["Proctoring", "exam page: Excelsoft easyProctor; FAQ: Meazure Learning (follow your scheduling page; not Pearson VUE)"],
+        ["Retakes", "24 h after a first fail; 15 days after later fails"],
+        ["Prep course", "AEMSO-D200, certification.adobe.com/courses/1363"],
       ],
-      note: "Time, passing score, cost and delivery are from Adobe's exam page. Question count and formats are from Adobe's Exam Prep Guide (transcribed July 2026). Re-check the exam page before booking.",
+      note: "Time, passing score, cost and delivery are from Adobe's exam page. Question count and formats are from Adobe's Exam Prep Guide (transcribed July 2026). Logistics rows re-checked Nov 16, 2026 against the exam page and FAQ; where they conflict, follow your scheduling page.",
     },
     OFFICIAL_READING = [
       { sec: "S1", objectives: ["Purpose of Dispatcher configurations and caching", "Steps to configure multi-site in AEM", "Create and manage OSGi configurations", "Manage custom Oak indexes", "Create and manage AEM custom logs"],
@@ -14114,7 +14124,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
       h(
         "p",
         { style: { margin: "0 0 14px", fontSize: 12.5, color: f.dim, fontFamily: SANS, lineHeight: 1.5 } },
-        "Retired as a score on Oct 22, 2026. Logged by hand, not from /drill. After ~7 attempts it measures memory, not understanding. One more run is planned in sprint week 6: focused, timed, single sitting, as a stamina check only. /drill and the weekly self-checks are the real score.",
+        "Retired as a score on Oct 22, 2026. Logged by hand, not from /drill. After ~7 attempts it measures memory, not understanding. An optional stamina run was planned for Oct sprint week 6: focused, timed, single sitting, as a stamina check only. /drill and the weekly self-checks are the real score.",
       ),
       h(
         "div",
@@ -14188,8 +14198,8 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
     }, [rd, ld]);
     let done = READINESS.filter((r) => rd[r.id]).length;
     let routine = [
-      ["10 min", "Core rules (/guide) + this week's topics, without looking"],
-      ["15 min", "This week's hands-on task"],
+      ["10 min", "Core rules (/guide) + this phase's topics, without looking"],
+      ["15 min", "This phase's hands-on task (or a timed drill set on Dec 2–3)"],
       ["5 min", "Explain one question out loud, including why each wrong answer is wrong"],
     ];
     return h(
@@ -14198,7 +14208,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
       h(
         "div",
         { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 } },
-        h("h3", { style: { margin: 0, fontFamily: JET, fontSize: 13.5, color: f.green } }, "ready to book when…"),
+        h("h3", { style: { margin: 0, fontFamily: JET, fontSize: 13.5, color: f.green } }, "exam-ready by Fri Dec 4…"),
         h("span", { style: { fontFamily: MONO, fontSize: 12, color: done === READINESS.length ? f.green : f.dim } }, `${done}/${READINESS.length}`),
       ),
       h(
@@ -14253,7 +14263,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
       h(
         "p",
         { style: { margin: "12px 0 0", fontSize: 12.5, color: f.dim, fontFamily: SANS, lineHeight: 1.5 } },
-        "Exam: Nov 24 target. Adobe's exam page: 100 minutes, passing score 32/50, so about 2 minutes per question. Avoid Thanksgiving week (Nov 26).",
+        "Exam: Sat Dec 5, 1:00 PM CT, online proctored. Adobe's exam page: 100 minutes, passing score 32/50; Adobe's FAQ says up to 10 unscored items, so plan for up to 60 (~1.6 min each). Thanksgiving (Nov 26–27): 30–45 min review only. No new topics after Thu Dec 3.",
       ),
     );
   }
@@ -14272,7 +14282,8 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
     }
   }
   function Ts() {
-    return new Date().toISOString().slice(0, 10);
+    let d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
   function If(e) {
     if (!e) return 0;
@@ -14282,7 +14293,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
   }
   function Zp(e) {
     let t = If(e);
-    return t < 0 ? 1 : Math.min(6, Math.floor(t / 7) + 1);
+    return phaseOf(e);
   }
   var me = ({ children: e, style: t }) =>
       i.default.createElement(
@@ -14502,13 +14513,13 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
         { q: "Match each to a log: exceptions / who requested a URL / per-request timing / who published something and when.", a: "error.log / access.log / request.log / audit.log." },
         { q: "Name the Dispatcher's three separate jobs and the piece that owns each.", a: "/filter = what gets in. /cache /rules = what gets cached. Flush agent or /invalidate = when cached files get cleared." },
         { q: "Content is stale on Publish right after publishing. Most likely culprit?", a: "The flush agent (cache not being invalidated)." },
-        { q: "On AEMaaCS a service picked up the wrong config values. Which two Developer Console views?", a: "Configurations + OSGi Services." },
-        { q: "An /apps clientlib isn't served through /etc.clientlibs, and clientlibs aren't minified. What do you check for each?", a: "allowProxy=true on the clientlib folder. Minify: the HTML Library Manager OSGi config." },
+        { q: "On AEMaaCS a service picked up the wrong config values. Which two Developer Console views?", a: "Configurations + OSGi Components (Components shows bound property values; OSGi Services doesn't show config values)." },
+        { q: "An /apps clientlib isn't served through /etc.clientlibs, and clientlibs aren't minified. What do you check for each?", a: "allowProxy=true on the clientlib folder. Minify: the Minify option in the Adobe Granite HTML Library Manager config (the official practice exam's answer); per-clientlib control is jsProcessor/cssProcessor." },
       ],
       105: [
         { q: "Where do index definitions live, and how is that path written inside a code package?", a: "/oak:index at the repository root. In code the folder is _oak_index, because FileVault can't use a colon in a folder name." },
         { q: "Why can't you just create an index in CRXDE on AEMaaCS?", a: "The repository is immutable at runtime, so indexes must ship in code." },
-        { q: "What's the AEMaaCS naming rule for custom indexes, and what happens when you change one?", a: "<name>-custom-<n>. Every change bumps n so the new version builds alongside the old one." },
+        { q: "What's the AEMaaCS naming rule for custom indexes, and what happens when you change one?", a: "Customized OOTB: <name>-<productVersion>-custom-<n> (damAssetLucene-8-custom-1). Fully custom: prefixed, e.g. acme.productSearch-1-custom-1. Every change bumps the custom number so the new version builds alongside the old one." },
         { q: "Replication to Publish fails on permissions. Whose permissions? What privilege does namespace registration need?", a: "The replication (transport) user's, not the admin's. Namespace registration needs jcr:namespaceManagement." },
         { q: "What replaces replication agents on AEMaaCS?", a: "Sling Content Distribution." },
         { q: "What lets instances find each other so jobs can offload?", a: "Sling Discovery, which builds the topology." },
@@ -14523,6 +14534,10 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
   function weekDrillIds(n, sessions) {
     let w = WEEK_DRILLS[n];
     if (!w) return [];
+    if (w === "MISSED") {
+      let m = missedIds(sessions);
+      return m.length ? m : As.map((q) => q.id);
+    }
     if (w === "UNSEEN") {
       let seen = new Set((sessions || []).flatMap((x) => x.entries.map((y) => y.qId))),
         un = As.filter((q) => !seen.has(q.id)).map((q) => q.id);
@@ -14606,7 +14621,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
           el("div", { style: { fontFamily: MONO, fontSize: 13, color: got === items.length ? f.green : f.amber, marginBottom: 3 } },
             got === items.length ? `passed ${got}/${items.length}` : `${got}/${items.length} cold`),
           el("div", { style: { fontFamily: SANS, fontSize: 13, color: f.dim, lineHeight: 1.45, marginBottom: 9 } },
-            got === items.length ? "Week marked taught." : "Reread what you missed, then retry tomorrow."),
+            got === items.length ? "Marked taught." : "Reread what you missed, then retry tomorrow."),
           el("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
             btn("retry", () => (setRev({}), setRes({})), f.dim),
             btn("show lesson", () => setCk(!1), f.dim))),
@@ -14618,15 +14633,1024 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
         Ms[e.n] && Ms[e.n].handsOn && e.n !== 106
           ? row(!!st.hands, "Hands-on task done", st.hands ? "tap to undo" : "tap when finished", () => save({ ...st, hands: !st.hands }))
           : null,
-        row(faOk, `≥80% first-attempt HITs`, `${e.n === 106 ? "all items" : "this week's items"} · ${fa.seen}/${fa.total} seen · ${fa.hits} HIT (${fa.pct}%)`, null),
+        row(faOk, `≥80% first-attempt HITs`, `${e.n === 106 ? "all items" : e.n === 206 ? "items you've missed" : "this phase's items"} · ${fa.seen}/${fa.total} seen · ${fa.hits} HIT (${fa.pct}%)`, null),
         el("div", { style: { marginTop: 12 } },
-          btn(e.n === 106 ? `drill unseen items (${ids.length})` : `drill this week (${ids.length} items)`, () => dw(ids), f.amber, !0))),
+          btn(e.n === 106 ? `drill unseen items (${ids.length})` : e.n === 206 ? `drill missed items (${ids.length})` : `drill this phase (${ids.length} items)`, () => dw(ids), f.amber, !0))),
     );
   }
   /* ===== Oct 18 2026: Adobe-docs audit ===== */
   var AUDIT_DATE = "2026-10-18",
     WEEK_SOURCES = {"101": [{"t": "AEM: Creating Workflow Models", "u": "https://experienceleague.adobe.com/docs/experience-manager-65/developing/extending-aem/extending-workflows/workflows-models.html?lang=en"}, {"t": "Custom Process Step (tutorial)", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/forms/adaptive-forms/custom-process-step-aem-workflow"}, {"t": "AEM: Starting Workflows (launchers)", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-64/administering/operations/workflows-starting"}, {"t": "AEMaaCS: Administering Workflow Instances", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/administering/workflows-administering"}], "102": [{"t": "HTL Specification (Adobe)", "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"}, {"t": "Apache Sling: HTL Scripting Engine", "u": "https://sling.apache.org/documentation/bundles/scripting/scripting-htl.html"}, {"t": "Apache Sling Models", "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"}, {"t": "Sling Models @ValueMapValue javadoc", "u": "https://sling.apache.org/apidocs/sling14/org/apache/sling/models/annotations/injectorspecific/ValueMapValue.html"}], "103": [{"t": "AEM: Editable Page Templates", "u": "https://experienceleague.adobe.com/docs/experience-manager-65/developing/platform/templates/page-templates-editable.html?lang=en"}, {"t": "Using Core Components", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/get-started/using"}, {"t": "AEMaaCS: Style System", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/authoring/page-editor/style-system"}], "104": [{"t": "AEMaaCS: Debugging using logs", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"}, {"t": "KB: Examples of request.log analysis", "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-21309"}, {"t": "KB: Enabling and Managing Audit Logs", "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-24740"}, {"t": "Dispatcher: Configure AEM Dispatcher", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/dispatcher-configuration"}, {"t": "Dispatcher: Invalidate Cached Pages", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/page-invalidate"}, {"t": "KB: Dispatcher filter rules blocking requests", "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-34606"}, {"t": "Debugging AEMaaCS with the Developer Console", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/developer-console"}, {"t": "Debugging AEM SDK: OSGi web console", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-sdk/osgi-web-consoles"}, {"t": "AEMaaCS: Client-Side Libraries", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/full-stack/clientlibs"}], "105": [{"t": "AEM 6.5: Oak Queries and Indexing", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/deploying/queries-and-indexing"}, {"t": "AEMaaCS: Content Search and Indexing", "u": "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/operations/indexing.html?lang=en"}, {"t": "AEM 6.5: Troubleshooting Replication", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/configuring/troubleshoot-rep"}, {"t": "AEMaaCS: Replication", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/operations/replication"}, {"t": "AEM 6.5: Offloading Jobs", "u": "https://experienceleague.adobe.com/docs/experience-manager-65/deploying/configuring/offloading.html?lang=en"}, {"t": "AEM 6.5: Troubleshooting Slow Queries", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/developing/bestpractices/troubleshooting-slow-queries"}], "1": [{"t": "Apache Sling: URL to Script Resolution", "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/the-sling-engine/url-to-script-resolution.html"}, {"t": "AEMaaCS: Sling Resource Merger", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/full-stack/sling-resource-merger"}], "2": [{"t": "Dispatcher: Configure AEM Dispatcher", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/dispatcher-configuration"}, {"t": "Dispatcher: Invalidate Cached Pages", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/page-invalidate"}, {"t": "AEMaaCS: Replication", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/operations/replication"}], "3": [{"t": "AEMaaCS: Configuring OSGi", "u": "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/implementing/deploying/configuring-osgi.html"}, {"t": "Debugging AEM SDK: OSGi web console", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-sdk/osgi-web-consoles"}], "4": [{"t": "Apache Sling Models", "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"}, {"t": "Sling Models @ValueMapValue javadoc", "u": "https://sling.apache.org/apidocs/sling14/org/apache/sling/models/annotations/injectorspecific/ValueMapValue.html"}, {"t": "AEMaaCS: Enabling JSON Export", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/full-stack/components-templates/enabling-json-exporter"}], "5": [{"t": "HTL Specification (Adobe)", "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"}], "6": [{"t": "Using Core Components", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/get-started/using"}, {"t": "AEM: Editable Page Templates", "u": "https://experienceleague.adobe.com/docs/experience-manager-65/developing/platform/templates/page-templates-editable.html?lang=en"}, {"t": "AEMaaCS: Style System", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/authoring/page-editor/style-system"}, {"t": "Extend a Core Component (tutorial)", "u": "https://experienceleague.adobe.com/docs/experience-manager-learn/spa-react-tutorial/extend-component.html?lang=en"}], "7": [{"t": "Content Fragments and Experience Fragments", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/sites/content-fragments/understand-content-fragments-and-experience-fragments"}, {"t": "AEMaaCS: Customizing Content Fragments (API)", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/configuring-and-extending/content-fragments-customizing"}, {"t": "AEMaaCS: Multi Site Manager and Live Copy", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/administering/reusing-content/msm/overview"}, {"t": "Custom Process Step (tutorial)", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/forms/adaptive-forms/custom-process-step-aem-workflow"}], "8": [{"t": "Using the AEM Project Archetype", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-core-components/using/developing/archetype/using"}, {"t": "Apache Sling: Repository Initialization", "u": "https://sling.apache.org/documentation/bundles/repository-initialization.html"}, {"t": "AEMaaCS: Service Users (tutorial)", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/developing/advanced/service-users"}, {"t": "Cloud Manager: Code Quality Testing", "u": "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/test-results/code-quality-testing.html"}, {"t": "AEMaaCS: Deploying Your Code", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/deploy-code"}], "9": [{"t": "KB: Examples of request.log analysis", "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-21309"}, {"t": "KB: Enabling and Managing Audit Logs", "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-24740"}, {"t": "Dispatcher: Configure AEM Dispatcher", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/dispatcher-configuration"}, {"t": "KB: Dispatcher filter rules blocking requests", "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-34606"}, {"t": "AEM 6.5: Troubleshooting Replication", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/configuring/troubleshoot-rep"}, {"t": "AEM 6.5: Oak Queries and Indexing", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/deploying/queries-and-indexing"}, {"t": "AEM 6.5: Offloading Jobs", "u": "https://experienceleague.adobe.com/docs/experience-manager-65/deploying/configuring/offloading.html?lang=en"}], "10": [{"t": "WKND tutorial: Unit Testing", "u": "https://experienceleague.adobe.com/docs/experience-manager-learn/getting-started-wknd-tutorial-develop/project-archetype/unit-testing.html?lang=en"}, {"t": "AEMaaCS: Persisted GraphQL queries", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/headless/graphql-api/persisted-queries"}, {"t": "Map SPA components to AEM components", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/getting-started-with-aem-headless/spa-editor/react/map-components"}, {"t": "AEMaaCS: SPA Editor Deprecation", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/hybrid/spa-editor-deprecation"}, {"t": "AEM 6.5: Troubleshooting Slow Queries", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/developing/bestpractices/troubleshooting-slow-queries"}, {"t": "AEMaaCS: Internationalizing UI Strings", "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/configuring-and-extending/internationalization/dev"}, {"t": "Apache Sling: i18n support", "u": "https://sling.apache.org/documentation/bundles/internationalization-support-i18n.html"}]},
     WEEK_NOTES = {"106": "Study guidance only; no technical claims to source.", "6": "Default CSS Classes wasn't on the Style System page checked.", "9": "stdout.log isn't described on the Adobe pages checked."};
+  /* ===== Nov 16 2026: final sprint to the Dec 5 exam (1:00 PM CT) ===== */
+  var EXAM_AT = "2026-12-05T13:00:00-06:00",
+    PHASE_STARTS = [0, 4, 7, 12, 15, 18],
+    SPs = [
+      { n: 201, label: "P1", dates: "Nov 16–19", title: "S5 · Which log, which console (logs, Developer Console, web console)", sections: ["S5", "S1"] },
+      { n: 202, label: "P2", dates: "Nov 20–22", title: "S5 · Dispatcher + clientlib debugging", sections: ["S5", "S1"] },
+      { n: 203, label: "P3", dates: "Nov 23–27", title: "S2 · HTL, Sling Models, OSGi, servlets (Nov 26–27: 30–45 min review only)", sections: ["S2"] },
+      { n: 204, label: "P4", dates: "Nov 28–30", title: "S2/S4 · Workflows, templates, CF vs XF, replication, queries", sections: ["S2", "S4"] },
+      { n: 205, label: "P5", dates: "Dec 1–3", title: "S1/S3/S4 refresh + timed novel sets (last new content Dec 3)", sections: ["S1", "S3", "S4"] },
+      { n: 206, label: "P6", dates: "Dec 4–5", title: "Taper, logistics, exam day", sections: ["S1", "S2", "S3", "S4", "S5"] },
+    ],
+    FINAL_SMs = {
+      201: {
+        mechanism:
+          "Locate the layer before you pick a log: CDN → Dispatcher/httpd → AEM publish → repository. If a request isn't in aemaccess or aemrequest, it never reached AEM; pages served from the Dispatcher cache or the CDN are not reflected in AEM logs at all. On AEMaaCS each log has a fixed name: aemerror is error.log (exceptions, a Sling Model that won't adapt, your own loggers); aemrequest pairs each request with its response and timing; aemaccess shows status, user and duration; aemdispatcher shows the cache action and filter rejects; aemhttpdaccess and aemhttpderror cover the publish web tier; the CDN log (JSON) shows cache HIT/MISS/PASS and traffic-filter rules. Custom log files aren't accessible on AEMaaCS: configure a Sling LogManager factory config in run-mode folders, set only the logger names and level, and the output lands in error.log. Adobe recommends DEBUG on dev, WARN on stage, ERROR on prod. You get logs through Cloud Manager Download Logs or the aio CLI. The Developer Console is read-only: OSGi Bundles and Java Packages explain a bundle that won't start, Configurations shows whether a config is present, OSGi Components shows unsatisfied references and bound property values, Servlets shows which servlet wins for a path, and Status Dumps include Sling Jobs, Oak definitions (not merged indexes) and the Query Performance tool.",
+        analogy:
+          "Triage nurse first, specialist second. The symptom decides which scan you order: a stack trace is an X-ray (aemerror), a slow page is a stopwatch (aemrequest), a cached page is a patient who never came through the door (no AEM log at all). The Developer Console is the viewing room: you can look at every scan, but you can't operate from there.",
+        artifact: `// ui.config/.../osgiconfig/config/
+// org.apache.sling.commons.log.LogManager.factory.config-feed.cfg.json
+{
+  "org.apache.sling.commons.log.names": ["com.example.feed"],
+  "org.apache.sling.commons.log.level": "debug"
+}
+// same PID in config.stage → "warn", config.prod → "error"
+// output goes to error.log (aemerror). No custom file.
+
+symptom                          → check first
+exception / model returns null   → aemerror
+which requests, order, timing    → aemrequest
+status code, user, duration      → aemaccess
+cache miss, "Filter rejects"     → aemdispatcher
+cache hit ratio, WAF block       → CDN log (cache field, rules field)
+bundle won't start               → Dev Console: Java Packages + OSGi Bundles
+config value looks wrong         → Dev Console: Configurations + OSGi Components
+which servlet answered           → Dev Console: Servlets`,
+        delta65:
+          "6.5 keeps separate files in crx-quickstart/logs: error.log, request.log, access.log, audit.log, stdout.log, rotated daily. Custom log files are allowed on 6.5, and /system/console (bundles, components, configMgr) is writable. On AEMaaCS stage/prod there's no Felix console, no CRXDE write and no custom log file, so options built on those are distractors.",
+        handsOn:
+          "On the SDK: add a @Reference to a service that doesn't exist, deploy, and find the component as unsatisfied in /system/console/components and the cause in error.log. Then add the LogManager factory config above at debug for your package and confirm the lines appear in error.log.",
+        takeaways: [
+          "Locate the layer first; a cache-served page leaves no AEM log entry",
+          "aemerror = exceptions; aemrequest = request/response timing; aemaccess = status/user; aemdispatcher = cache action + filter rejects; CDN log = edge cache + WAF",
+          "AEMaaCS custom logs: LogManager factory config, names + level only, output in error.log; no custom files",
+          "DEBUG dev, WARN stage, ERROR prod",
+          "Dev Console is read-only: config wrong → Configurations + OSGi Components; bundle won't start → Java Packages + Bundles; which servlet → Servlets",
+          "Oak definitions dump doesn't show merged indexes",
+        ],
+      },
+      202: {
+        mechanism:
+          "The Dispatcher does three separate jobs. /filter decides what gets in, and a denied request returns 404, not 403; write it as an allowlist (deny * first, then allow). /cache /rules decides what gets cached. Invalidation decides when a cached file is stale: a flush touches .stat files, and /statfileslevel sets how deep that goes. When content is stale after a successful invalidation, walk the request path: (1) trigger scope: out of the box only Experience Fragments invalidate the pages that reference them; publishing a Content Fragment invalidates only the fragment's own path; (2) Dispatcher: the aemdispatcher log shows the cache action, and /statfileslevel may be too shallow; (3) CDN: it follows cache headers and TTL separately from Dispatcher invalidation, so the CDN log shows cache HIT. For explicit invalidation on AEMaaCS, Adobe prefers Sling Content Distribution from Author; the Replication API driving the publish flush agent is the alternative. Cloud Dispatcher logging maxes out at debug and debugging rewrite rules in the cloud is not effectively possible, so reproduce locally with the Dispatcher SDK: validate.sh (validator, httpd -t, immutable-file check), then docker_run.sh with DISP_LOG_LEVEL and REWRITE_LOG_LEVEL raised. Clientlibs: allowProxy=true lets an /apps clientlib be served from /etc.clientlibs; static files must sit in the clientlib's resources folder; ?debugClientLibs=true prints files individually; dumplibs.html lists categories, embeds and dependencies.",
+        analogy:
+          "The bouncer (/filter) turns people away at the door and pretends the club doesn't exist (404). The stockroom manager (/cache /rules) decides what goes on the shelf. The expiry stickers (.stat files) say what's out of date, but only on the shelves they reach (/statfileslevel). The CDN is a second warehouse with its own shelf-life labels: fixing the first warehouse doesn't relabel the second.",
+        artifact: `# local Dispatcher SDK (work computer)
+./bin/validate.sh src/dispatcher
+DISP_LOG_LEVEL=Debug REWRITE_LOG_LEVEL=Debug \\
+  ./bin/docker_run.sh src/dispatcher host.docker.internal:4503 8080
+# look for "Filter rejects" and the rule it names
+
+# conf.dispatcher.d/filters: allowlist
+/0001 { /type "deny"  /url "*" }
+/0100 { /type "allow" /url "/content/my-site/*" }
+/0110 { /type "allow" /url "/etc.clientlibs/*" }
+
+# clientlib debugging
+https://<publish>/content/my-site/en.html?debugClientLibs=true
+/libs/granite/ui/content/dumplibs.html`,
+        delta65:
+          "6.5: you check the publish Dispatcher Flush agent (transport URI, CQ-Handle headers), /allowedClients and /invalidate in dispatcher.any, and you can clear a path by hand with POST /dispatcher/invalidate.cache (CQ-Action: Activate, CQ-Handle: <path>). AEMaaCS: no direct file or flush-agent fiddling in prod; use SCD from Author and test Dispatcher config locally with the SDK.",
+        handsOn:
+          "With the Dispatcher SDK: (1) deny a path, request it on 8080, see the 404 and the 'Filter rejects' line. (2) Cache a page, change it on publish, see it stay stale, invalidate and watch the .stat file; try a different /statfileslevel. (3) Remove allowProxy from a clientlib, request it via /etc.clientlibs, then debug with ?debugClientLibs=true and dumplibs.",
+        takeaways: [
+          "Filter deny = 404; allowlist = deny * first, then allow",
+          "/filter = in; /cache /rules = cached; .stat + /statfileslevel = stale",
+          "Stale after invalidation: trigger scope (CF only its path, XF also referencing pages) → Dispatcher (aemdispatcher, statfileslevel) → CDN (TTL, cache HIT)",
+          "Explicit invalidation on AEMaaCS: SCD from Author preferred; Replication API + flush agent is the alternative",
+          "Cloud Dispatcher log max = debug; rewrite debugging → Dispatcher SDK locally",
+          "Clientlib 404 on publish: allowProxy + /etc.clientlibs first, then the Dispatcher filter",
+        ],
+      },
+      203: {
+        mechanism:
+          "HTL escapes by context. uri is the default for href, src, action and poster, and it outputs nothing when the value fails validation; unsafe turns XSS protection off. data-sly-resource renders another resource in a new request (options: resourceType, selectors, addSelectors, removeSelectors, appendPath, prependPath), and the current scope is not passed to it. data-sly-include runs another script against the same resource. data-sly-list repeats the children of an element; data-sly-repeat repeats the element itself. Sling Models: prefer injector-specific annotations (@ValueMapValue, @ChildResource, @OSGiService, @Self, @ScriptVariable, @SlingObject, @RequestAttribute, @ResourcePath) over @Inject. Injection is REQUIRED by default, so one missing required field makes adaptTo() return null; defaultInjectionStrategy on @Model makes the whole class optional, injectionStrategy on one injector makes one field optional. data-sly-use parameters arrive as request attributes, so the model adapts from SlingHttpServletRequest. OSGi Declarative Services: @Component registers a service, @Reference binds one, @Designate with an @ObjectClassDefinition types the config; a component whose mandatory reference can't be satisfied doesn't activate and shows as unsatisfied. Servlets: bind by resource type (with selectors and extensions) rather than by path. On AEMaaCS, Cloud Manager flags the Sling Scheduler (rule AMSCORE-554); prefer Sling Jobs, which guarantee processing.",
+        analogy:
+          "data-sly-resource is calling a different department: they answer with their own staff (resource type) and don't see your notes (scope). data-sly-include is pulling a different form out of your own drawer for the same case. A required injection is a mandatory field on a form: leave one blank and the whole form is rejected (null).",
+        artifact: `<!-- another resource, new request, extra selector -->
+<div data-sly-resource="\${'cta' @ addSelectors='compact'}"></div>
+<!-- same resource, another script -->
+<sly data-sly-include="partials/meta.html"/>
+<!-- uri context: an invalid URL outputs nothing -->
+<a href="\${model.link}">More</a>
+
+@Model(adaptables = SlingHttpServletRequest.class,
+       defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL,
+       resourceType = "my-site/components/teaser")
+@Exporter(name = "jackson", extensions = "json")
+public class TeaserModel {
+  @ValueMapValue private String title;
+  @ChildResource private List<Resource> links;
+  @OSGiService private PriceService prices;
+  @RequestAttribute(name = "variant") private String variant;
+}`,
+        delta65:
+          "HTL, Sling Models and Declarative Services behave the same on 6.5 and AEMaaCS. Differences show up around them: on AEMaaCS configs ship as .cfg.json in run-mode folders and you can't fix a config in the Felix console on prod, and Cloud Manager's code quality rules flag Sling Scheduler use.",
+        handsOn:
+          "In a scratch component on the SDK, render a child with data-sly-resource and addSelectors, then with data-sly-include, and compare which script runs. Register two servlets on the same resource type with different selectors and check which one handles each URL with /system/console/servletresolver.",
+        takeaways: [
+          "data-sly-resource = another resource, new request, no scope; data-sly-include = another script, same resource",
+          "href/src default to the uri context; invalid value → nothing output",
+          "OSGi service into a Sling Model = @OSGiService (not @Reference)",
+          "REQUIRED by default → one missing field = null model; class-level OPTIONAL on @Model, field-level on the injector",
+          "Unsatisfied @Reference → component doesn't activate; see OSGi Components",
+          "Bind servlets by resource type; prefer Sling Jobs over the Sling Scheduler on AEMaaCS",
+        ],
+      },
+      204: {
+        mechanism:
+          "Workflows: design-time models live in /conf/global/settings/workflow/models (or /conf/<project>/...), Adobe's out-of-the-box models in /libs/settings/workflow/models (never edit), and the runtime copy that actually executes in /var/workflow/models; /etc/workflow/models is legacy. Syncing a model writes the runtime copy, and code that starts a workflow uses the /var path. A custom step is a component that implements WorkflowProcess and writes execute(WorkItem, WorkflowSession, MetaDataMap). Workflows run as Sling Jobs, so the Developer Console's Sling Jobs dump shows queue counts. Editable templates live in /conf/<site>/settings/wcm/templates: Structure (locked or unlocked), Initial Content, and policies. Allowed components are set on the Layout Container's policy; author-pickable styles are Allowed Styles in a component policy. A proxy component sits under /apps with sling:resourceSuperType on the component node pointing at a versioned Core Component. Content Fragments are structured, presentation-agnostic data; Experience Fragments are a reusable group of components with layout, used as-is. On AEMaaCS, publishing an XF invalidates referencing pages; publishing a CF invalidates only its own path. Replication on AEMaaCS: Tools → Deployment → Distribution shows the publish agent's queue; a common blocker is an AccessDeniedException for the sling-distribution-importer service user, fixed with repoinit ACLs or by fixing the content. Slow query: explain it first (Query Performance), then change an index.",
+        analogy:
+          "/conf is the blueprint, /var is the printed copy the crew works from; editing the blueprint changes nothing until you print (Sync). A CF is a recipe card (data only); an XF is a plated dish (content plus presentation). Publishing a new plated dish updates every table it was served to; a new recipe card doesn't reprint the menus that quote it.",
+        artifact: `/conf/global/settings/workflow/models/review   design time (edit, then Sync)
+/var/workflow/models/review                     runtime copy (this runs)
+
+WorkflowModel model = wfSession.getModel("/var/workflow/models/review");
+wfSession.startWorkflow(model, wfSession.newWorkflowData("JCR_PATH", path));
+
+/apps/my-site/components/title
+  sling:resourceSuperType = "core/wcm/components/title/v3/title"
+
+# AEMaaCS distribution queue blocked:
+Tools → Deployment → Distribution → publish agent → Status
+  AccessDeniedException ... sling-distribution-importer
+  → repoinit ACL change in code, redeploy through the pipeline`,
+        delta65:
+          "6.5: replication agents at /etc/replication/agents.author.html (View Log, Test Connection), flush agents on publish, static templates and design mode as distractors, and /etc/workflow/models as the legacy model path. AEMaaCS: Sling Content Distribution instead of agents, everything through code and the pipeline.",
+        handsOn:
+          "On the SDK: throw an exception from a WorkflowProcess, run the model, and find it in error.log and the Workflow Failures console. In the Template Editor, open the Layout Container policy's Allowed Components. Run an unindexed JCR-SQL2 query through Explain Query.",
+        takeaways: [
+          "Workflow models: /conf design time, /var runtime (runs), /libs OOTB, /etc legacy; code starts the /var path",
+          "Custom step implements WorkflowProcess; one method: execute(WorkItem, WorkflowSession, MetaDataMap)",
+          "Allowed components = Layout Container policy; author-pickable styles = Allowed Styles",
+          "Proxy: sling:resourceSuperType on the component node → versioned core component",
+          "CF = data; XF = presentation used as-is; XF publish invalidates referencing pages, CF publish doesn't",
+          "Blocked distribution queue: check the Distribution Status tab; sling-distribution-importer AccessDenied → repoinit ACLs",
+        ],
+      },
+      205: {
+        mechanism:
+          "Run-mode config folders on AEMaaCS: config, config.author, config.publish, config.author.dev|rde|stage|prod, config.publish.<env>, config.<env>. The folder with the most matching run modes wins. Order matters: config.author.dev is valid, config.dev.author is not; unknown tokens (config.qa), uppercase and config.preview are invalid (preview inherits publish). On 6.5 the most specific config wins for the whole PID; properties aren't merged across folders. Per-environment values come from Cloud Manager environment variables: $[env:NAME] and $[secret:NAME]. Service users and ACLs come from repoinit, which ships as an OSGi factory config (org.apache.sling.jcr.repoinit.RepositoryInitializer~<name>.cfg.json). Oak indexes on AEMaaCS ship in ui.apps under _oak_index and must be Lucene: a customized out-of-the-box index is <name>-<productVersion>-custom-<n> (for example damAssetLucene-8-custom-1); a fully custom index takes a prefix (acme.productSearch-1-custom-1); each change bumps the custom number; don't rename or delete deployed index nodes. A new index populates on deployment. On 6.5, reindex=true is for changing an existing index. Code quality thresholds are fixed: Security below B and Reliability below D are Critical (fail); Maintainability below A and Coverage below 50% are Important (pause, overridable by a Deployment Manager, Project Manager or Business Owner); the rest are Info. AEMaaCS maintenance updates are applied automatically through Cloud Manager; on 6.5 you apply service packs yourself, staged: stage first, then prod. Dec 2 and Dec 3: one timed mixed set each, then write why each miss was wrong.",
+        analogy:
+          "Run-mode folder names are an address written in a fixed order: street before apartment. Swap them (config.dev.author) and the mail carrier doesn't deliver it at all; no error, the config just isn't there.",
+        artifact: `ui.config/src/main/content/jcr_root/apps/my-site/osgiconfig/
+  config/               every tier, every env
+  config.author/        author, every env
+  config.author.dev/    author + dev        (✗ config.dev.author)
+  config.publish.prod/  publish + prod
+  config.stage/         both tiers on stage
+  ✗ config.qa   ✗ config.preview   ✗ Config.Author
+
+ui.apps/src/main/content/jcr_root/_oak_index/
+  damAssetLucene-8-custom-1/        customized OOTB index
+  acme.productSearch-1-custom-1/    fully custom (prefix)
+
+Quality gates (fixed, not configurable)
+  Security < B, Reliability < D        → Critical  (fail)
+  Maintainability < A, Coverage < 50%  → Important (pause)`,
+        delta65:
+          "6.5: indexes created or edited in CRXDE and rebuilt with reindex=true, run modes from the start command (java -jar … -r publish,dev), service packs you apply. AEMaaCS: indexes only in code with versioned names, environment types (dev/stage/prod) via folders and env vars, updates Adobe applies.",
+        handsOn:
+          "On the SDK: put a config in config.dev.author, start with -r author,dev, and confirm it's absent in configMgr; move it to config.author.dev and confirm it appears. Then do the timed set from 'Drill this phase' (Dec 2 and Dec 3).",
+        takeaways: [
+          "config.author.dev, never config.dev.author; no config.qa / config.preview / uppercase",
+          "6.5: most specific config wins for the whole PID; no merging",
+          "Per-env values: $[env:NAME], $[secret:NAME]",
+          "Index names: <name>-<ver>-custom-<n> or prefix.<name>-1-custom-1; ship in ui.apps; Lucene only",
+          "Gates: Security <B, Reliability <D = Critical; Maintainability <A, Coverage <50% = Important",
+          "Repoinit = OSGi factory config, not bundle provisioning",
+        ],
+      },
+      206: {
+        mechanism:
+          "No new topics in the last 48 hours. Fri Dec 4: wrong-answer review only (Drill this phase serves the items you've missed), system test, room prep. Sat Dec 5: 20–30 minutes of light recall on the core rules, then seated and logged in by 12:30 PM CT; the proctor starts at 1:00 PM CT. The exam is 100 minutes; Adobe's FAQ says it may include up to 10 unscored questions you can't tell apart, so plan for up to 60 items. First pass at about 1.3 minutes each finishes near minute 75; use the rest for flagged items and make sure nothing is blank. Elimination order: drop tools that don't exist in the stated environment (Felix console, CRXDE write or Package Manager on AEMaaCS prod); drop invented names (made-up logs, config.qa, 403 for a filter block); between two real tools, 'first step' wording wants the most specific read-only diagnostic and 'how to fix' wording wants a change through Git and the pipeline.",
+        analogy:
+          "Race-week taper: you don't add mileage the week of the race. The fitness is already built; the job now is to show up rested and execute the plan.",
+        artifact: `Wed Dec 2  · 1:00 PM CT  last day for a name-mismatch support ticket (≥72 h)
+Fri Dec 4  · before 1:00 PM CT  last chance to reschedule or cancel (>24 h)
+           · system test + Process Tracker (Chrome or Edge), time zone = Central
+           · 30 min: wrong-answer review only
+Sat Dec 5  · 20–30 min light recall, no new topics
+           · 12:30 PM CT seated, logged in, physical ID on the desk
+           · 1:00 PM CT  proctor starts the session
+Pacing     · up to 60 items / 100 min → ~1.3 min first pass, done ≈ min 75
+           · second pass on flagged items · last 5 min: no blanks`,
+        delta65:
+          "Exam framing: answers are AEMaaCS-first. 6.5 names (Felix console on prod, /etc paths, replication agents on AEMaaCS, custom log files on AEMaaCS) mostly appear as distractors unless the stem says 6.5.",
+        handsOn:
+          "No lab. Run Adobe's system test on the exam computer, uninstall remote-sharing apps, unplug external monitors, and clear the desk (no papers, phone, watch or earbuds).",
+        takeaways: [
+          "Reschedule/cancel only more than 24 h ahead: before 1:00 PM CT Fri Dec 4",
+          "Physical government ID matching your legal name; no digital copies",
+          "Up to 60 items in 100 min: ~1.3 min first pass, flag and move on, no blanks",
+          "Eliminate: tools missing in that environment → invented names → 'first step' = most specific read-only check",
+          "Provisional pass/fail on screen; final score can take up to 72 h",
+        ],
+      },
+    },
+    FINAL_DRILLS = {
+      201: ["q9", "q17", "q18", "q29", "q30", "q43", "q44", "q47", "q51", "q53", "q54", "q55", "q58", "q71", "q82", "q84", "q85"],
+      202: ["q13", "q16", "q33", "q36", "q52", "q56", "q57", "q83", "q86", "q87", "q90"],
+      203: ["q1", "q2", "q3", "q4", "q32", "q35", "q37", "q38", "q40", "q59", "q60", "q61", "q72", "q73", "q74", "q75", "q76", "q77", "q78", "q79", "q80", "q81", "q91", "q92", "q94", "q95"],
+      204: ["q5", "q6", "q8", "q15", "q19", "q21", "q26", "q39", "q41", "q42", "q45", "q46", "q62", "q63", "q64", "q65", "q67", "q89", "q93"],
+      205: ["q7", "q10", "q11", "q12", "q14", "q23", "q24", "q25", "q27", "q28", "q31", "q34", "q48", "q49", "q50", "q66", "q68", "q69", "q70", "q88"],
+      206: "MISSED",
+    },
+    FINAL_CHECKS = {
+      201: [
+        { q: "A page loads fine, but aemaccess has no entry for that request. Why?", a: "It was served from the Dispatcher cache or the CDN. Cache-served requests never reach AEM, so AEM logs don't show them." },
+        { q: "Name the AEMaaCS log for: an exception / request-response timing pairs / a cache miss or filter reject / the cache hit ratio.", a: "aemerror / aemrequest / aemdispatcher / the CDN log." },
+        { q: "Your logger writes to logs/feed.log on AEMaaCS and you can't see it. Why, and what's the fix?", a: "Custom log files aren't accessible. Use a LogManager factory config that sets only names and level; output goes to error.log." },
+        { q: "A service on AEMaaCS acts as if a config value is wrong. Which two Developer Console views?", a: "Configurations (is the config there) + OSGi Components (bound property values)." },
+        { q: "A bundle won't start after a deploy. Which Developer Console views?", a: "Java Packages (unresolved import or version mismatch) + OSGi Bundles (state, wiring)." },
+        { q: "Adobe's recommended custom log level per environment?", a: "DEBUG on dev, WARN on stage, ERROR on prod." },
+      ],
+      202: [
+        { q: "What status does a Dispatcher filter block return, and what's the allowlist order?", a: "404. Deny * first, then allow specific entries." },
+        { q: "Content is stale after a successful invalidation. Three places, in order?", a: "Trigger scope (CF only its own path; XF also referencing pages) → Dispatcher (aemdispatcher log, /statfileslevel) → CDN (TTL/headers, CDN log cache HIT)." },
+        { q: "Adobe's preferred explicit invalidation on AEMaaCS, and the alternative?", a: "Sling Content Distribution from Author. Alternative: Replication API driving the publish flush agent." },
+        { q: "You want trace-level rewrite logging on stage. What do you do?", a: "You can't: cloud Dispatcher logging maxes out at debug. Reproduce locally with the Dispatcher SDK and raise REWRITE_LOG_LEVEL." },
+        { q: "An /apps clientlib 404s on publish. Two checks, in order?", a: "allowProxy=true and requesting it via /etc.clientlibs; then that the Dispatcher filter allows /etc.clientlibs." },
+        { q: "How do you see individual JS files instead of the concatenated one, and list all clientlib categories?", a: "?debugClientLibs=true; /libs/granite/ui/content/dumplibs.html." },
+      ],
+      203: [
+        { q: "data-sly-resource vs data-sly-include?", a: "resource renders another resource in a new request (its own resource type, selectors; scope not passed). include runs another script on the same resource." },
+        { q: "Default context for href, and what's output for an invalid URL?", a: "uri; nothing is output." },
+        { q: "How do you inject an OSGi service into a Sling Model?", a: "@OSGiService. @Reference is for DS components, not Sling Models." },
+        { q: "A DS component's mandatory @Reference has no matching service. What state, and where do you see it?", a: "Unsatisfied; it doesn't activate. OSGi Components in the Developer Console, or /system/console/components on the SDK." },
+        { q: "Make the whole model optional vs one field optional?", a: "Whole: defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL on @Model. One field: injectionStrategy = InjectionStrategy.OPTIONAL on its injector." },
+        { q: "What does Cloud Manager flag instead of recommending the Sling Scheduler?", a: "AMSCORE-554: don't use the Sling Scheduler; prefer Sling Jobs." },
+      ],
+      204: [
+        { q: "Four workflow model locations, and which one runs?", a: "/conf (design time), /var/workflow/models (runtime, runs), /libs (OOTB, never edit), /etc (legacy)." },
+        { q: "Code starts a workflow by model path. Which path?", a: "The /var/workflow/models runtime path." },
+        { q: "Where do you set which components authors can add on a template?", a: "The Layout Container's policy (Allowed Components)." },
+        { q: "A republished XF refreshes pages; a republished CF doesn't. Why?", a: "Out of the box only XFs invalidate referencing pages; a CF publish invalidates only the CF path." },
+        { q: "AEMaaCS publish queue is blocked. Where do you look and what's the usual cause?", a: "Tools → Deployment → Distribution → agent → Status. AccessDeniedException for sling-distribution-importer; fix with repoinit ACLs or the content." },
+        { q: "Slow query: first step?", a: "Explain it (Query Performance) before creating or changing an index." },
+      ],
+      205: [
+        { q: "Is config.dev.author valid? What about config.preview?", a: "No: it's config.author.dev. config.preview is invalid (preview inherits publish)." },
+        { q: "Two folders match on 6.5. Are properties merged?", a: "No. The most specific config wins for the entire PID." },
+        { q: "Name a customized OOTB index and a fully custom one. Which module ships them?", a: "damAssetLucene-8-custom-1; acme.productSearch-1-custom-1. ui.apps." },
+        { q: "Coverage comes in at 45%. What happens?", a: "Important failure: the pipeline pauses; a Deployment Manager, Project Manager or Business Owner can override or reject." },
+        { q: "How do you give stage and prod different secret values for one config?", a: "Cloud Manager environment variables: $[secret:NAME] (or $[env:NAME] for non-secrets)." },
+        { q: "How does repoinit ship?", a: "As an OSGi factory config: org.apache.sling.jcr.repoinit.RepositoryInitializer~<name>.cfg.json." },
+      ],
+      206: [
+        { q: "What's the reschedule/cancel cut-off?", a: "More than 24 hours ahead: before 1:00 PM CT Fri Dec 4." },
+        { q: "Pacing plan for up to 60 items in 100 minutes?", a: "~1.3 min first pass (done near minute 75), second pass on flagged items, last 5 minutes: no blanks." },
+        { q: "Three elimination moves, in order?", a: "Drop tools missing in that environment, drop invented names, then 'first step' = most specific read-only diagnostic." },
+        { q: "ID rule?", a: "Physical government ID that matches your legal name; digital copies aren't allowed." },
+      ],
+    },
+    FINAL_SOURCES = {
+      201: [
+        { t: "AEMaaCS: Logging", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/logging" },
+        { t: "AEMaaCS: Debugging using logs", u: "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs" },
+        { t: "AEMaaCS: Log Forwarding", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/log-forwarding" },
+        { t: "AEM Developer Console", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/aem-developer-console" },
+        { t: "Debugging AEMaaCS with the Developer Console", u: "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/developer-console" },
+        { t: "AEM 6.5: Monitoring and maintaining", u: "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/deploying/configuring/monitoring-and-maintaining" },
+      ],
+      202: [
+        { t: "Dispatcher: Configure AEM Dispatcher", u: "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/dispatcher-configuration" },
+        { t: "KB: Dispatcher filter rules blocking requests", u: "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-34606" },
+        { t: "AEMaaCS: Caching", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/content-delivery/caching" },
+        { t: "AEMaaCS: Validating and debugging with Dispatcher tools", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/content-delivery/validation-debug" },
+        { t: "Dispatcher tools setup (tutorial)", u: "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/local-development-environment-set-up/dispatcher-tools" },
+        { t: "AEMaaCS: Replication", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/operations/replication" },
+        { t: "AEMaaCS: Client-Side Libraries", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/full-stack/clientlibs" },
+      ],
+      203: [
+        { t: "HTL Specification (Adobe)", u: "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md" },
+        { t: "Apache Sling Models", u: "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html" },
+        { t: "Apache Sling: Servlets and Scripts", u: "https://sling.apache.org/documentation/the-sling-engine/servlets.html" },
+        { t: "AEMaaCS: Configuring OSGi", u: "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/implementing/deploying/configuring-osgi.html" },
+        { t: "Cloud Manager: Custom Code Quality Rules", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-manager/content/using/custom-code-quality-rules" },
+        { t: "AEM Developer Console", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/aem-developer-console" },
+      ],
+      204: [
+        { t: "AEM 6.5: Workflow Best Practices", u: "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/developing/extending-aem/extending-workflows/workflows-best-practices" },
+        { t: "AEMaaCS: Administering Workflow Instances", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/administering/workflows-administering" },
+        { t: "AEM: Editable Page Templates", u: "https://experienceleague.adobe.com/docs/experience-manager-65/developing/platform/templates/page-templates-editable.html?lang=en" },
+        { t: "Content Fragments and Experience Fragments", u: "https://experienceleague.adobe.com/en/docs/experience-manager-learn/sites/content-fragments/understand-content-fragments-and-experience-fragments" },
+        { t: "AEMaaCS: Caching", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/content-delivery/caching" },
+        { t: "AEMaaCS: Replication", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/operations/replication" },
+        { t: "AEM 6.5: Troubleshooting Slow Queries", u: "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/developing/bestpractices/troubleshooting-slow-queries" },
+      ],
+      205: [
+        { t: "AEMaaCS: Deploying (run modes)", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/deploying/overview" },
+        { t: "AEMaaCS: Configuring OSGi", u: "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/implementing/deploying/configuring-osgi.html" },
+        { t: "AEMaaCS: Content Search and Indexing", u: "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/operations/indexing.html?lang=en" },
+        { t: "Cloud Manager: Code Quality Testing", u: "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/test-results/code-quality-testing.html" },
+        { t: "Apache Sling: Repository Initialization", u: "https://sling.apache.org/documentation/bundles/repository-initialization.html" },
+        { t: "AEMaaCS: AEM Version Updates", u: "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/deploying/aem-version-updates" },
+      ],
+      206: [
+        { t: "Adobe: AD0-E128 exam page", u: "https://certification.adobe.com/certification/sites-developer-professional-v2/1232" },
+        { t: "Adobe certification FAQ", u: "https://certification.adobe.com/support/faq" },
+      ],
+    },
+    FINAL_NOTES = {
+      201: "Verified Nov 16, 2026 against the pages below. Not verified: the exact aio log command (Adobe sources spell it three ways; run aio cloudmanager --help). Adobe's Developer Console page conflicts with itself: per-tier status lights, yet Query Performance 'only works when a specific pod is selected'.",
+      202: "Verified Nov 16, 2026 against the pages below. Not verified: the default /statfileslevel in the shipped SDK farm (Adobe's WKND reference uses 2). Minification on AEMaaCS: Adobe sources disagree (HTML Library Manager Minify option vs per-clientlib jsProcessor/cssProcessor); the official practice exam's answer is the HTML Library Manager.",
+      203: "HTL, Sling Models and AMSCORE-554 verified against the pages below. Not re-verified: the servlet path-binding guidance (standard Sling practice) and DS reference semantics (OSGi spec; Adobe's Developer Console page confirms it shows unsatisfied references).",
+      204: "Workflow paths, CF/XF invalidation and the distribution queue verified against the pages below. Not verified: the launcher location and the exact AEMaaCS 'Sync' wording; the getModel/startWorkflow snippet and repoinit ACL line are illustrative.",
+      205: "Run modes, index naming, quality gates and repoinit-as-config verified. Not verified on an official page: the full archetype module list.",
+      206: "From Adobe's exam page and FAQ (Nov 16, 2026). Conflicts: the exam page names Excelsoft easyProctor and the FAQ names Meazure Learning (follow your scheduling page; it isn't Pearson VUE). Retake wait after a second failure: 15 days (exam page, FAQ) vs 14 (learn-more page). Not verified: question formats, flag/review feature, check-in minutes. Taper timing is general study advice.",
+    },
+    FINAL_WEAK = [
+      { id: "w16", text: "S5: AEMaaCS log names — aemerror / aemrequest / aemaccess / aemdispatcher / CDN log", closed: !1 },
+      { id: "w17", text: "S5: Developer Console tab → question (Java Packages, Configurations, OSGi Components, Servlets)", closed: !1 },
+      { id: "w18", text: "S5: stale content — CF vs XF invalidation, /statfileslevel, CDN TTL", closed: !1 },
+      { id: "w19", text: "S5: Dispatcher SDK — validate.sh, docker_run.sh, log levels (cloud max = debug)", closed: !1 },
+      { id: "w20", text: "S1/S4: Oak index naming + delivery (custom-N, prefix, ui.apps, Lucene)", closed: !1 },
+    ];
+  function phaseOf(startIso) {
+    let t = If(startIso);
+    if (t < 0) return 1;
+    let k = 0;
+    PHASE_STARTS.forEach((s) => { t >= s && (k += 1); });
+    return Math.max(1, Math.min(6, k));
+  }
+  function missedIds(sessions) {
+    let last = {};
+    (sessions || []).forEach((x) => x.entries.forEach((y) => { last[y.qId] || (last[y.qId] = y.cls); }));
+    return Object.keys(last).filter((id) => last[id] !== "hit");
+  }
+  (Object.assign(Ms, FINAL_SMs),
+    Object.assign(WEEK_DRILLS, FINAL_DRILLS),
+    Object.assign(CHECKS, FINAL_CHECKS),
+    Object.assign(WEEK_SOURCES, FINAL_SOURCES),
+    Object.assign(WEEK_NOTES, FINAL_NOTES),
+    Lf.push(...FINAL_WEAK));
+  var FINAL_NEW_DRILLS = [
+    {
+      "id": "q82",
+      "section": "S5",
+      "type": "single",
+      "stem": "On AEMaaCS, /content/my-site/en/pricing.html loads in about 40 ms. A developer searches the aemaccess and aemrequest logs for that request at that minute and finds nothing.",
+      "q": "What's the most likely explanation, and where's the evidence?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The page was served from the Dispatcher or CDN cache, so it never reached AEM; check the CDN log's cache field and the aemdispatcher log"
+        },
+        {
+          "id": "b",
+          "text": "aemaccess logging is off by default on publish; enable it with a LogManager config"
+        },
+        {
+          "id": "c",
+          "text": "AEM logs only failed requests; successful ones appear in aemerror at INFO"
+        },
+        {
+          "id": "d",
+          "text": "Log forwarding lags by an hour; restart the publish tier to flush the logs"
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "plain": "The page came back fast and AEM's own logs never saw it. What sits in front of AEM and can answer without asking it?",
+      "explain": "Adobe's logging page says requests served from the Dispatcher cache or the CDN are not reflected in AEM logs. The CDN log records cache HIT/MISS/PASS, and the aemdispatcher log shows the Dispatcher's cache action, so those are where this request shows up.",
+      "audit": {
+        "ver": "verified",
+        "note": "Self-authored item, Nov 16, 2026. Checked against Adobe's AEMaaCS Logging page.",
+        "src": [
+          {
+            "t": "AEMaaCS: Logging",
+            "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/logging"
+          },
+          {
+            "t": "AEMaaCS: Debugging using logs",
+            "u": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/cloud-service/debugging/debugging-aem-as-a-cloud-service/logs"
+          }
+        ]
+      },
+      "why": {
+        "b": "Adobe documents the access and request logs as not configurable; there's no switch to turn them on.",
+        "c": "aemaccess and aemrequest record successful requests too; this request simply never reached AEM.",
+        "d": "Restarting isn't an evidence step, and customers don't restart AEMaaCS tiers."
+      }
+    },
+    {
+      "id": "q83",
+      "section": "S5",
+      "type": "single",
+      "stem": "A rewrite rule misbehaves only on the AEMaaCS stage environment. A developer wants trace-level rewrite logging there to watch each rule fire.",
+      "q": "What's the right approach?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Reproduce it with the Dispatcher SDK locally (DISP_RUN_MODE=stage) and raise REWRITE_LOG_LEVEL there; cloud logging can't go to trace"
+        },
+        {
+          "id": "b",
+          "text": "Set REWRITE_LOG_LEVEL=trace in conf.d/variables/global.var and deploy to stage"
+        },
+        {
+          "id": "c",
+          "text": "Raise the rewrite log level in the Developer Console's Configurations tab"
+        },
+        {
+          "id": "d",
+          "text": "Download aemhttpderror from Cloud Manager with the 'trace' option"
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "plain": "The cloud caps how chatty the Dispatcher's logs can get. Where can you turn it all the way up?",
+      "explain": "Adobe's logging page says Dispatcher log levels in the cloud max out at debug (trace is local only) and that debugging rewrite rules in the cloud is not effectively possible; use the Dispatcher SDK. The SDK lets you simulate an environment with DISP_RUN_MODE and raise REWRITE_LOG_LEVEL.",
+      "audit": {
+        "ver": "verified",
+        "note": "Self-authored item, Nov 16, 2026. Checked against Adobe's AEMaaCS Logging page and the Dispatcher tools validation/debug page.",
+        "src": [
+          {
+            "t": "AEMaaCS: Logging",
+            "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/logging"
+          },
+          {
+            "t": "AEMaaCS: Validating and debugging with Dispatcher tools",
+            "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/content-delivery/validation-debug"
+          }
+        ]
+      },
+      "why": {
+        "b": "Trace isn't available in the cloud; the maximum there is debug.",
+        "c": "The Developer Console is read-only and doesn't manage Dispatcher logging.",
+        "d": "Download Logs fetches what was logged; it can't change the level."
+      }
+    },
+    {
+      "id": "q84",
+      "section": "S5",
+      "type": "single",
+      "stem": "On AEMaaCS dev, GET /content/my-site/en.export.json should be answered by a servlet bound to the page resource type with the 'export' selector. Instead, the default JSON renderer answers.",
+      "q": "Which Developer Console tab tells you which servlet actually handles that request?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Servlets: enter the path, selectors, extension and method to see candidates in resolution order"
+        },
+        {
+          "id": "b",
+          "text": "Integrations"
+        },
+        {
+          "id": "c",
+          "text": "Repository"
+        },
+        {
+          "id": "d",
+          "text": "Status Dumps → Oak definitions"
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "plain": "You want to ask the console 'who answers this exact URL?'. Which tab takes a URL's parts as input?",
+      "explain": "Adobe's Developer Console page: for a given path, selectors, extension and method, the Servlets tab lists the matching servlets in resolution order, so you can see which one won.",
+      "audit": {
+        "ver": "verified",
+        "note": "Self-authored item, Nov 16, 2026. Checked against Adobe's AEM Developer Console page.",
+        "src": [
+          {
+            "t": "AEM Developer Console",
+            "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/aem-developer-console"
+          }
+        ]
+      },
+      "why": {
+        "b": "Integrations holds service credentials and developer tokens.",
+        "c": "Repository opens the read-only repository browser; it doesn't resolve servlets.",
+        "d": "Oak definitions list index definitions, not servlets."
+      }
+    },
+    {
+      "id": "q85",
+      "section": "S5",
+      "type": "multi",
+      "stem": "After a deploy to AEMaaCS dev, a new OSGi component never activates. The team suspects the bundle itself isn't resolving.",
+      "q": "Which TWO Developer Console views give the most direct evidence? (choose two)",
+      "options": [
+        {
+          "id": "a",
+          "text": "Java Packages"
+        },
+        {
+          "id": "b",
+          "text": "OSGi Bundles"
+        },
+        {
+          "id": "c",
+          "text": "Integrations"
+        },
+        {
+          "id": "d",
+          "text": "Configurations"
+        },
+        {
+          "id": "e",
+          "text": "Repository"
+        }
+      ],
+      "correct": [
+        "a",
+        "b"
+      ],
+      "plain": "If the bundle can't start, its components can't either. Which views show a bundle's state and the packages it couldn't import?",
+      "explain": "Adobe's Developer Console page: OSGi Bundles shows each bundle's actual state and its wired imports and exports; Java Packages explains why a bundle won't start (an unresolved import or a version mismatch). The documented fix is to match the AEM SDK API version or embed the dependency as an OSGi bundle.",
+      "audit": {
+        "ver": "verified",
+        "note": "Self-authored item, Nov 16, 2026. Checked against Adobe's AEM Developer Console page.",
+        "src": [
+          {
+            "t": "AEM Developer Console",
+            "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/aem-developer-console"
+          }
+        ]
+      },
+      "why": {
+        "c": "Integrations is for credentials, not bundle resolution.",
+        "d": "Configurations shows whether a config exists; it won't explain a bundle that can't resolve.",
+        "e": "Repository browses content, not OSGi wiring."
+      }
+    },
+    {
+      "id": "q86",
+      "section": "S5",
+      "type": "single",
+      "stem": "With the Dispatcher SDK running on port 8080, /content/my-site/en/data.feed.json returns 404. The same URL returns 200 directly from the local publish on 4503.",
+      "q": "What's the best first step?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Run with DISP_LOG_LEVEL=Debug and look for a 'Filter rejects' line naming the matching rule"
+        },
+        {
+          "id": "b",
+          "text": "Add an allow rule for /* so every request passes, then retest"
+        },
+        {
+          "id": "c",
+          "text": "Look for a 403 in the httpd access log, since filter blocks return 403"
+        },
+        {
+          "id": "d",
+          "text": "Clear the browser cache and retry in a private window"
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "plain": "Publish has the content; the Dispatcher won't hand it over. What evidence tells you which rule said no?",
+      "explain": "Adobe's KB on filter blocks: capture the exact URL, check the Dispatcher log for 'Filter rejects' and note the rule, then fix with an explicit allow and confirm you haven't over-opened access. Denied requests return 404. The SDK raises verbosity with DISP_LOG_LEVEL=Debug.",
+      "audit": {
+        "ver": "verified",
+        "note": "Self-authored item, Nov 16, 2026. Checked against Adobe's KB ka-34606, the Dispatcher configuration page and the Dispatcher tools page.",
+        "src": [
+          {
+            "t": "KB: Dispatcher filter rules blocking requests",
+            "u": "https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-34606"
+          },
+          {
+            "t": "Dispatcher: Configure AEM Dispatcher",
+            "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/dispatcher-configuration"
+          },
+          {
+            "t": "AEMaaCS: Validating and debugging with Dispatcher tools",
+            "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/content-delivery/validation-debug"
+          }
+        ]
+      },
+      "why": {
+        "b": "Allowing everything is a change without evidence, and it over-opens access.",
+        "c": "Dispatcher filter blocks return 404, not 403.",
+        "d": "Publish already serves it; the problem is server-side, not in the browser."
+      }
+    },
+    {
+      "id": "q87",
+      "section": "S5",
+      "type": "single",
+      "stem": "On AEMaaCS, an author republishes a Content Fragment. Pages that show it through a fragment component keep the old text from the Dispatcher cache. Earlier that day, republishing an Experience Fragment refreshed every page that used it.",
+      "q": "What explains the difference?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Out of the box only Experience Fragments invalidate the pages that reference them; a Content Fragment publish invalidates only the fragment's own path"
+        },
+        {
+          "id": "b",
+          "text": "The publish flush agent is broken for Content Fragments"
+        },
+        {
+          "id": "c",
+          "text": "/statfileslevel is set too high"
+        },
+        {
+          "id": "d",
+          "text": "The CDN ignores Dispatcher invalidation for JSON but not for HTML"
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "plain": "Two kinds of fragment, two different results from the same action. Which one does AEM track back to the pages using it?",
+      "explain": "Adobe's Caching in AEMaaCS page: XFs get reverse-reference invalidation of consuming pages out of the box; publishing a CF invalidates only the CF path. To refresh referencing pages, invalidate them explicitly (Adobe prefers Sling Content Distribution from Author).",
+      "audit": {
+        "ver": "verified",
+        "note": "Self-authored item, Nov 16, 2026. Checked against Adobe's Caching in AEMaaCS page.",
+        "src": [
+          {
+            "t": "AEMaaCS: Caching",
+            "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/content-delivery/caching"
+          },
+          {
+            "t": "AEMaaCS: Replication",
+            "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/operations/replication"
+          }
+        ]
+      },
+      "why": {
+        "b": "The XF publish worked the same day, so the invalidation path itself is working.",
+        "c": "/statfileslevel applies to CF and XF publishes alike, so it can't explain why one refreshed the pages and the other didn't.",
+        "d": "Invented rule: the CDN follows cache headers and TTL, not content type rules like this."
+      }
+    },
+    {
+      "id": "q88",
+      "section": "S5",
+      "type": "single",
+      "stem": "A Cloud Manager full-stack pipeline reports Code Coverage of 42%. Every other metric passes. The pipeline is now waiting.",
+      "q": "What's happening, and what can be done?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Coverage below 50% is an Important failure: the pipeline pauses until a Deployment Manager, Project Manager or Business Owner overrides or rejects it"
+        },
+        {
+          "id": "b",
+          "text": "It's a Critical failure: the pipeline has already failed"
+        },
+        {
+          "id": "c",
+          "text": "It's Info only; the wait is unrelated"
+        },
+        {
+          "id": "d",
+          "text": "Lower the threshold in the project's pom.xml and rerun"
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "plain": "Cloud Manager has three tiers of failure. Which tier pauses instead of failing?",
+      "explain": "Adobe's Code Quality Testing page: Coverage below 50% is Important. Important failures pause the pipeline, and a Deployment Manager, Project Manager or Business Owner can override or reject. Critical metrics are Security below B and Reliability below D. Thresholds are fixed.",
+      "audit": {
+        "ver": "verified",
+        "note": "Self-authored item, Nov 16, 2026. Checked against Adobe's Code Quality Testing page.",
+        "src": [
+          {
+            "t": "Cloud Manager: Code Quality Testing",
+            "u": "https://experienceleague.adobe.com/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/test-results/code-quality-testing.html"
+          }
+        ]
+      },
+      "why": {
+        "b": "Critical is for Security below B and Reliability below D.",
+        "c": "Info metrics (duplicated lines, open issues, skipped tests) don't pause the pipeline.",
+        "d": "The thresholds aren't configurable."
+      }
+    },
+    {
+      "id": "q89",
+      "section": "S5",
+      "type": "single",
+      "stem": "An AEMaaCS deploy step fails. Under Tools → Deployment → Distribution the publish agent card is red, and the queue's first item shows an AccessDeniedException for the sling-distribution-importer user.",
+      "q": "What's the right fix?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Grant the needed permissions with repoinit (or fix the content that writes there), commit, and redeploy through the pipeline"
+        },
+        {
+          "id": "b",
+          "text": "Add sling-distribution-importer to administrators in the Felix console on publish"
+        },
+        {
+          "id": "c",
+          "text": "Restart the publish tier from Cloud Manager"
+        },
+        {
+          "id": "d",
+          "text": "Clear the queue and rerun the pipeline unchanged"
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "plain": "The error names a user and a permission. On AEMaaCS, how do permissions change?",
+      "explain": "Adobe's AEMaaCS Replication page: a common blocked-queue cause is an AccessDeniedException for the sling-distribution-importer service user; fix it with repoinit ACLs or by fixing the content. The Cloud Manager FAQ also says to check the distribution queue when a deploy step fails.",
+      "audit": {
+        "ver": "verified",
+        "note": "Self-authored item, Nov 16, 2026. Checked against Adobe's AEMaaCS Replication page and Cloud Manager FAQ.",
+        "src": [
+          {
+            "t": "AEMaaCS: Replication",
+            "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/operations/replication"
+          },
+          {
+            "t": "Cloud Manager FAQ",
+            "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/faqs"
+          }
+        ]
+      },
+      "why": {
+        "b": "No Felix console on AEMaaCS publish, and admin rights for a service user aren't the documented fix.",
+        "c": "Restarting isn't a fix for a permission error, and isn't a customer action on AEMaaCS.",
+        "d": "Clearing the item removes the symptom; the same content will block again."
+      }
+    },
+    {
+      "id": "q90",
+      "section": "S5",
+      "type": "single",
+      "stem": "An /apps clientlib has allowProxy={Boolean}true. /etc.clientlibs/my-site/clientlibs/site.min.css returns 200 from publish on 4503, but 404 through the Dispatcher.",
+      "q": "What do you check next?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Whether the Dispatcher filter allows /etc.clientlibs/*"
+        },
+        {
+          "id": "b",
+          "text": "Set allowProxy to false so the file is served from /apps"
+        },
+        {
+          "id": "c",
+          "text": "Move the clientlib under /libs"
+        },
+        {
+          "id": "d",
+          "text": "Append ?debugClientLibs=true on the Dispatcher URL"
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "plain": "Publish already serves the file through the proxy path. What between the browser and publish can turn it into a 404?",
+      "explain": "Adobe's clientlib page: allowProxy lets an /apps clientlib be served via /etc.clientlibs. Publish returning 200 proves that part works. Dispatcher returns 404 for requests its filter denies, so the remaining suspect is the filter.",
+      "audit": {
+        "ver": "partial",
+        "note": "Self-authored item, Nov 16, 2026. Each fact is verified (allowProxy behavior, 404 for filter denials); the diagnosis combining them is reasoning, not a quoted Adobe rule.",
+        "src": [
+          {
+            "t": "AEMaaCS: Client-Side Libraries",
+            "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/full-stack/clientlibs"
+          },
+          {
+            "t": "Dispatcher: Configure AEM Dispatcher",
+            "u": "https://experienceleague.adobe.com/en/docs/experience-manager-dispatcher/using/configuring/dispatcher-configuration"
+          }
+        ]
+      },
+      "why": {
+        "b": "/apps isn't readable on publish; allowProxy exists so you don't serve from /apps.",
+        "c": "/libs is Adobe's; you never put project code there.",
+        "d": "debugClientLibs splits the files for reading; it won't get past a filter denial."
+      }
+    },
+    {
+      "id": "q91",
+      "section": "S2",
+      "type": "single",
+      "stem": "A page component must render its child node 'cta' using the child's own component, but with an extra 'compact' selector so a different script of that component runs.",
+      "q": "Which HTL does that?",
+      "options": [
+        {
+          "id": "a",
+          "text": "<div data-sly-resource=\"${'cta' @ addSelectors='compact'}\"></div>"
+        },
+        {
+          "id": "b",
+          "text": "<div data-sly-include=\"${'cta' @ addSelectors='compact'}\"></div>"
+        },
+        {
+          "id": "c",
+          "text": "<div data-sly-use.cta=\"cta.compact\"></div>"
+        },
+        {
+          "id": "d",
+          "text": "<div data-sly-call=\"${cta @ selectors='compact'}\"></div>"
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "plain": "You need another resource rendered by its own component. Which block statement dispatches a new request for a resource?",
+      "explain": "Per the HTL spec, data-sly-resource includes the result of rendering another resource (a new request), and supports addSelectors, removeSelectors, selectors, resourceType, appendPath and prependPath. data-sly-include runs a script against the current resource.",
+      "audit": {
+        "ver": "verified",
+        "note": "Self-authored item, Nov 16, 2026. Checked against the HTL specification.",
+        "src": [
+          {
+            "t": "HTL Specification (Adobe)",
+            "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"
+          }
+        ]
+      },
+      "why": {
+        "b": "data-sly-include runs a script on the same resource; it doesn't render the child as its own component.",
+        "c": "data-sly-use loads a model or helper object; it doesn't render a resource.",
+        "d": "data-sly-call invokes a data-sly-template, not a resource."
+      }
+    },
+    {
+      "id": "q92",
+      "section": "S2",
+      "type": "single",
+      "stem": "An author enters javascript:alert(1) in a teaser's link field. The HTL is <a href=\"${model.link}\">Read more</a>, with no context option.",
+      "q": "What does HTL output for the href value?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Nothing: the uri context is the default for href and outputs nothing when validation fails"
+        },
+        {
+          "id": "b",
+          "text": "The value unchanged, since the author entered it"
+        },
+        {
+          "id": "c",
+          "text": "The value HTML-escaped, so it's harmless text"
+        },
+        {
+          "id": "d",
+          "text": "A compile error for the whole script"
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "plain": "HTL picks an escaping rule from where the expression sits. What rule applies to a link attribute, and what does it do with a bad URL?",
+      "explain": "The HTL spec makes uri the default display context for href, src, action and poster, and that context outputs nothing if the value fails validation. Only the unsafe context switches XSS protection off.",
+      "audit": {
+        "ver": "verified",
+        "note": "Self-authored item, Nov 16, 2026. Checked against the HTL specification.",
+        "src": [
+          {
+            "t": "HTL Specification (Adobe)",
+            "u": "https://github.com/adobe/htl-spec/blob/master/SPECIFICATION.md"
+          }
+        ]
+      },
+      "why": {
+        "b": "Outputting it unchanged would need context='unsafe'.",
+        "c": "Escaping for text isn't what the uri context does; it validates and drops invalid values.",
+        "d": "Context handling happens at render time; the script still compiles."
+      }
+    },
+    {
+      "id": "q93",
+      "section": "S2",
+      "type": "single",
+      "stem": "Java code starts a workflow programmatically by looking up the model by path. The model was built and synced in the model editor under /conf/global/settings/workflow/models/review.",
+      "q": "Which path should the code use to get the model?",
+      "options": [
+        {
+          "id": "a",
+          "text": "/var/workflow/models/review"
+        },
+        {
+          "id": "b",
+          "text": "/conf/global/settings/workflow/models/review"
+        },
+        {
+          "id": "c",
+          "text": "/etc/workflow/models/review"
+        },
+        {
+          "id": "d",
+          "text": "/libs/settings/workflow/models/review"
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "plain": "Two copies of the model exist after a sync. Which one does the engine actually execute?",
+      "explain": "Adobe's workflow best practices: design-time models live in /conf, syncing generates the runtime copy in /var/workflow/models, and programmatic starts use the /var runtime path. /etc/workflow/models is legacy; /libs holds Adobe's out-of-the-box models.",
+      "audit": {
+        "ver": "verified",
+        "note": "Self-authored item, Nov 16, 2026. Checked against Adobe's 6.5 Workflow Best Practices page.",
+        "src": [
+          {
+            "t": "AEM 6.5: Workflow Best Practices",
+            "u": "https://experienceleague.adobe.com/en/docs/experience-manager-65/content/implementing/developing/extending-aem/extending-workflows/workflows-best-practices"
+          }
+        ]
+      },
+      "why": {
+        "b": "/conf is the design-time copy you edit; it isn't what runs.",
+        "c": "/etc/workflow/models is the legacy location.",
+        "d": "/libs holds Adobe's out-of-the-box models, not yours."
+      }
+    },
+    {
+      "id": "q94",
+      "section": "S2",
+      "type": "single",
+      "stem": "A DS component declares a mandatory @Reference to com.example.PriceService. No bundle in the environment provides that service.",
+      "q": "What state is the component in, and where do you confirm it on AEMaaCS?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Unsatisfied (not activated); the Developer Console's OSGi Components view shows the unsatisfied reference"
+        },
+        {
+          "id": "b",
+          "text": "Active with a null field; check aemerror for a NullPointerException"
+        },
+        {
+          "id": "c",
+          "text": "The whole bundle fails to install; check Cloud Manager build logs"
+        },
+        {
+          "id": "d",
+          "text": "Active but marked deprecated; check the Services tab"
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "plain": "A component needs a service that doesn't exist. Can DS start it anyway?",
+      "explain": "Adobe's Developer Console page: OSGi Components lists active vs unsatisfied components and their unsatisfied references. Under Declarative Services, a component whose mandatory reference can't be satisfied isn't activated.",
+      "audit": {
+        "ver": "partial",
+        "note": "Self-authored item, Nov 16, 2026. The Developer Console behavior is verified on Adobe's page; the DS activation rule is from the OSGi DS model and wasn't re-checked on an Adobe page.",
+        "src": [
+          {
+            "t": "AEM Developer Console",
+            "u": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/aem-developer-console"
+          }
+        ]
+      },
+      "why": {
+        "b": "A mandatory reference isn't injected as null; the component just doesn't activate.",
+        "c": "Bundle installation doesn't depend on another service being present.",
+        "d": "Invented state; 'deprecated' isn't a DS component state."
+      }
+    },
+    {
+      "id": "q95",
+      "section": "S2",
+      "type": "single",
+      "stem": "A Sling Model adapted from SlingHttpServletRequest needs an instance of the project's PriceService OSGi service.",
+      "q": "Which annotation injects it?",
+      "options": [
+        {
+          "id": "a",
+          "text": "@OSGiService"
+        },
+        {
+          "id": "b",
+          "text": "@Reference"
+        },
+        {
+          "id": "c",
+          "text": "@ScriptVariable"
+        },
+        {
+          "id": "d",
+          "text": "@Self"
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "plain": "Sling Models has its own injector for services. Which one is it?",
+      "explain": "The Sling Models docs list @OSGiService as the injector-specific annotation for OSGi services. @Reference belongs to Declarative Services components, @ScriptVariable injects scripting bindings, and @Self injects (or adapts) the adaptable itself.",
+      "audit": {
+        "ver": "verified",
+        "note": "Self-authored item, Nov 16, 2026. Checked against the Apache Sling Models documentation.",
+        "src": [
+          {
+            "t": "Apache Sling Models",
+            "u": "https://svn.apache.org/repos/infra/websites/production/sling/content/documentation/bundles/models.html"
+          }
+        ]
+      },
+      "why": {
+        "b": "@Reference is the DS annotation for OSGi components, not Sling Models.",
+        "c": "@ScriptVariable injects script bindings such as currentPage.",
+        "d": "@Self injects the adaptable or something adapted from it."
+      }
+    }
+  ];
+  As.push(...FINAL_NEW_DRILLS);
   function SourceList({ src: sr }) {
     if (!sr || !sr.length) return null;
     return i.default.createElement(
@@ -14857,6 +15881,8 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
       x = SPs.filter((y) => e[y.n] === "done").length,
       xo = Ps.filter((y) => e[y.n] === "done").length,
       [ao, setAo] = (0, i.useState)(!1),
+      xoct = OCT_SPs.filter((y) => e[y.n] === "done").length,
+      [aoct, setAoct] = (0, i.useState)(!1),
       [full, setFullRaw] = (0, i.useState)(() => { try { return localStorage.getItem("apc-plan-full") === "1"; } catch (e) { return !1; } }),
       setFull = (v) => { setFullRaw(v); try { localStorage.setItem("apc-plan-full", v ? "1" : "0"); } catch (e) {} },
       [lessonOpen, setLessonOpen] = (0, i.useState)(!1),
@@ -15003,9 +16029,9 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
               }),
           );
         };
-    let curW = SPs.find((w) => w.n === 100 + n) || SPs[SPs.length - 1],
+    let curW = SPs.find((w) => w.n === 200 + n) || SPs[SPs.length - 1],
       curDone = e[curW.n] === "done",
-      daysLeft = Math.ceil((new Date(EXAM_TARGET + "T09:00:00") - new Date()) / 864e5),
+      daysLeft = Math.round((Date.parse(EXAM_AT.slice(0, 10) + "T00:00:00Z") - Date.parse(Ts() + "T00:00:00Z")) / 864e5),
       toggleBtn = (label, onClick) =>
         i.default.createElement(
           "button",
@@ -15019,13 +16045,13 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
         i.default.createElement(
           me,
           { style: { padding: "14px 18px" } },
-          i.default.createElement("div", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 15, color: f.text, fontWeight: 700 } }, "Week ", Math.min(n, 6), " of 6", daysLeft > 0 ? ` \xB7 exam in ${daysLeft} days` : ""),
-          i.default.createElement("div", { style: { fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 12.5, color: f.dim, marginTop: 3 } }, "Target: Nov 24"),
+          i.default.createElement("div", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 15, color: f.text, fontWeight: 700 } }, "Phase ", Math.min(n, 6), " of 6", daysLeft > 1 ? ` \xB7 exam in ${daysLeft} days` : daysLeft === 1 ? " \xB7 exam tomorrow" : daysLeft === 0 ? " \xB7 exam today" : ""),
+          i.default.createElement("div", { style: { fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 12.5, color: f.dim, marginTop: 3 } }, "Exam: Sat Dec 5, 1:00 PM CT \xB7 online proctored \xB7 seated by 12:30"),
         ),
         i.default.createElement(
           me,
           { style: { padding: 18 } },
-          i.default.createElement("div", { style: { fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, letterSpacing: 0.6, textTransform: "uppercase", color: f.amber, marginBottom: 4 } }, "this week \xB7 sprint " + (curW.label || "W" + curW.n)),
+          i.default.createElement("div", { style: { fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, letterSpacing: 0.6, textTransform: "uppercase", color: f.amber, marginBottom: 4 } }, "this phase \xB7 " + (curW.label || "P") + " \xB7 " + curW.dates),
           i.default.createElement("div", { style: { fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 17, color: curDone ? f.dim : f.text, fontWeight: 600, marginBottom: 12, textDecoration: curDone ? "line-through" : "none" } }, curW.title),
           i.default.createElement(
             "div",
@@ -15038,7 +16064,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
             i.default.createElement(
               "button",
               { onClick: () => dw && dw(weekDrillIds(curW.n, sx)), style: { padding: "12px 14px", borderRadius: 6, cursor: "pointer", border: "none", background: f.amber, color: "#1A1206", fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14.5, fontWeight: 700, textAlign: "left" } },
-              "2 \xB7 Drill this week",
+              "2 \xB7 Drill this phase",
             ),
             i.default.createElement("div", { style: { fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 12.5, color: f.dim, padding: "2px 2px 0" } }, "3 \xB7 Self-check: at the end of the lesson"),
           ),
@@ -15054,7 +16080,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
     return i.default.createElement(
       "div",
       { style: { display: "grid", gap: 16 } },
-      toggleBtn("back to this week only", () => setFull(!1)),
+      toggleBtn("back to this phase only", () => setFull(!1)),
       i.default.createElement(
         me,
         { style: { padding: 18 } },
@@ -15085,9 +16111,9 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
               },
               "Day ",
               Math.max(1, l),
-              " \xB7 Week ",
+              " \xB7 Phase ",
               n,
-              " of 6 \xB7 sprint to the exam",
+              " of 6 \xB7 final sprint to Dec 5",
             ),
             i.default.createElement(
               "div",
@@ -15100,9 +16126,9 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
                 },
               },
               h > 0
-                ? `${h} week${h === 1 ? "" : "s"} behind calendar pace \u2014 ${x} of ${n - 1} finished weeks marked taught`
+                ? `${h} phase${h === 1 ? "" : "s"} behind calendar pace \u2014 ${x} of ${n - 1} finished phases marked taught`
                 : h < 0
-                  ? `${-h} week${h === -1 ? "" : "s"} ahead of calendar pace`
+                  ? `${-h} phase${h === -1 ? "" : "s"} ahead of calendar pace`
                   : "on pace with the calendar",
             ),
           ),
@@ -15178,7 +16204,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
                   fontWeight: 700,
                 },
               },
-              "reset to Oct 15",
+              "reset to Nov 16",
             ),
           ),
         i.default.createElement(
@@ -15214,7 +16240,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
               },
             },
             x,
-            "/6 sprint weeks closed",
+            "/6 phases closed",
           ),
         ),
         i.default.createElement(em, null),
@@ -15222,7 +16248,30 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
       i.default.createElement(
         me,
         { style: { padding: "4px 0" } },
-        SPs.map(rowFn(SPs, 100 + n)),
+        SPs.map(rowFn(SPs, 200 + n)),
+      ),
+      i.default.createElement(
+        me,
+        { style: { padding: 0 } },
+        i.default.createElement(
+          "button",
+          {
+            onClick: () => setAoct((z) => !z),
+            style: {
+              width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center",
+              padding: "13px 18px", background: "none", border: "none", cursor: "pointer",
+              color: f.dim, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12.5, textAlign: "left",
+            },
+          },
+          `archive \xB7 6-week sprint, Oct 15\u2013Nov 25 (${xoct}/6 taught)`,
+          i.default.createElement(Po, { size: 16, style: { transform: aoct ? "rotate(180deg)" : "none", transition: "transform 0.15s", flexShrink: 0 } }),
+        ),
+        aoct &&
+          i.default.createElement(
+            "div",
+            { style: { borderTop: `1px solid ${f.border}` } },
+            OCT_SPs.map(rowFn(OCT_SPs, -1)),
+          ),
       ),
       i.default.createElement(
         me,
@@ -16630,7 +17679,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
     );
   }
   function im({ weekStatus: e }) {
-    let t = [...Ps, ...SPs].filter((a) => e[a.n] === "done" && Ms[a.n]);
+    let t = [...Ps, ...OCT_SPs, ...SPs].filter((a) => e[a.n] === "done" && Ms[a.n]);
     return t.length === 0
       ? i.default.createElement(
           me,
@@ -16799,12 +17848,23 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
           x(await Eo("sessions", [])));
         let P = await Eo("sprintStart", null);
         P || ((P = SPRINT_START_DEFAULT), await Ta("sprintStart", P));
+        if (!(await Eo("migr-2026-11-16", !1))) {
+          P < SPRINT_START_DEFAULT && ((P = SPRINT_START_DEFAULT), await Ta("sprintStart", P));
+          let wk1 = await Eo("weak", null);
+          if (wk1) {
+            let ids1 = new Set(wk1.map((w) => w.id));
+            wk1 = [...wk1, ...FINAL_WEAK.filter((w) => !ids1.has(w.id))];
+            await Ta("weak", wk1);
+          }
+          await Ta("migr-2026-11-16", !0);
+        }
         if (!(await Eo("migr-2026-10-14", !1))) {
           let wk0 = await Eo("weak", Lf.filter((w) => !NEW_WEAK.includes(w))),
             ids = new Set(wk0.map((w) => w.id));
           wk0 = [...wk0, ...NEW_WEAK.filter((w) => !ids.has(w.id))];
           (s(wk0), await Ta("weak", wk0), await Ta("migr-2026-10-14", !0));
         }
+        s(await Eo("weak", Lf));
         (y(P), o(!0));
       })();
     }, []),
@@ -16840,7 +17900,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
       M = Object.values(r).filter((P) => P === "done").length,
       A = Zp(h),
       T = If(h) + 1,
-      H = `sprint day ${Math.max(1, T)} \xB7 week ${A} of 6`;
+      H = `day ${Math.max(1, T)} \xB7 phase ${A} of 6 \xB7 exam Dec 5, 1:00 PM CT`;
     return i.default.createElement(
       "div",
       {
@@ -17220,7 +18280,7 @@ OFFICIAL PRACTICE EXAM (retired as a score Oct 22)
       undrilled = gc.filter((g) => !g.drilled);
     let refBySection = Ft.map((sec) => ({
       ...sec,
-      bullets: [...SPs, ...Ps].filter((w) => w.sections.includes(sec.id) && Ms[w.n]).flatMap(
+      bullets: [...SPs, ...OCT_SPs.filter((w) => w.n !== 106), ...Ps].filter((w) => w.sections.includes(sec.id) && Ms[w.n]).flatMap(
         (w) => Ms[w.n].takeaways.map((x) => ({ week: wlab(w.n), text: x })),
       ),
     }));
